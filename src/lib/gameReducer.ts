@@ -4,7 +4,8 @@ import {
   isValidSum, 
   calculateScore,
   removeOffscreenViruses,
-  checkGameOver 
+  checkGameOver,
+  getVirusesPerRound
 } from './gameLogic';
 
 export const initialGameState: GameState = {
@@ -123,11 +124,12 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
     }
 
     case 'START_NEXT_ROUND': {
+      const nextRound = state.round + 1;
       return {
         ...state,
-        round: state.round + 1,
+        round: nextRound,
         virusesSpawned: 0,
-        virusesToSpawn: 50, // 라운드당 50개
+        virusesToSpawn: getVirusesPerRound(nextRound), // 라운드당 동적 개수 (10% 증가)
         virusesReachedBottom: 0,
         gameSpeed: state.gameSpeed + 0.1,
         isRoundComplete: false,

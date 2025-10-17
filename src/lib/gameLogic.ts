@@ -139,15 +139,18 @@ export const getVirusSpawnRate = (round: number): number => {
   return 1500; // 1.5초마다 1개씩 생성으로 겹침 방지
 };
 
-// 라운드에 따른 바이러스 낙하 속도 계산 (1초에 12px)
+// 라운드에 따른 바이러스 낙하 속도 계산 (라운드당 10% 증가)
 export const getVirusSpeed = (round: number): number => {
   const baseSpeed = 12 / 1000; // 1초에 12px = 0.012px/ms
-  return baseSpeed + (round * 0.001); // 라운드당 0.001 증가 (매우 천천히)
+  const speedMultiplier = Math.pow(1.1, round - 1); // 라운드당 10% 증가
+  return baseSpeed * speedMultiplier;
 };
 
-// 라운드당 생성할 바이러스 수 (테스트용 1개만)
-export const getVirusesPerRound = (): number => {
-  return 1; // 테스트용으로 딱 1개만
+// 라운드당 생성할 바이러스 수 (라운드당 10% 증가)
+export const getVirusesPerRound = (round: number): number => {
+  const baseViruses = 50; // 기본 50개
+  const virusMultiplier = Math.pow(1.1, round - 1); // 라운드당 10% 증가
+  return Math.round(baseViruses * virusMultiplier);
 };
 
 // 한 번에 생성할 바이러스 수 (테스트용 1개만)
@@ -168,15 +171,15 @@ export const getRandomX = (screenWidth: number): number => {
   return Math.random() * (screenWidth - virusSize - margin * 2) + margin;
 };
 
-// 바이러스가 서로 겹치지 않도록 위치 조정
+// 바이러스가 서로 겹치지 않도록 위치 조정 (랜덤 우선)
 export const adjustVirusPosition = (
   newVirus: Virus, 
   existingViruses: Virus[], 
   screenWidth: number
 ): Virus => {
-  const minDistance = 70; // 최소 거리 증가 (바이러스 크기 48px + 여유공간 22px)
+  const minDistance = 60; // 최소 거리 (바이러스 크기 48px + 여유공간 12px)
   const virusSize = 48; // 바이러스 크기
-  const margin = 30; // 화면 가장자리 여백 증가
+  const margin = 30; // 화면 가장자리 여백
   
   console.log(`바이러스 위치 조정 시작: 새 바이러스 x=${newVirus.x}, 기존 바이러스 수=${existingViruses.length}, 화면 너비=${screenWidth}`);
   
@@ -185,34 +188,12 @@ export const adjustVirusPosition = (
     return newVirus;
   }
 
-  // 현재 화면 상단 근처의 바이러스들만 고려 (y < 200인 바이러스들)
-  const nearbyViruses = existingViruses.filter(virus => virus.y < 200);
+  // 현재 화면 상단 근처의 바이러스들만 고려 (y < 150인 바이러스들)
+  const nearbyViruses = existingViruses.filter(virus => virus.y < 150);
   
-  // 체계적으로 위치 배치: 화면을 70px 간격으로 나누어 배치
-  const availablePositions = [];
-  for (let x = margin; x <= screenWidth - margin - virusSize; x += minDistance) {
-    availablePositions.push(x);
-  }
-  
-  console.log(`사용 가능한 위치들: ${availablePositions.length}개, 근처 바이러스: ${nearbyViruses.length}개`);
-  
-  // 사용 가능한 위치 중에서 겹치지 않는 위치 찾기
-  for (const testX of availablePositions) {
-    const overlappingViruses = nearbyViruses.filter(virus => {
-      const distanceX = Math.abs(virus.x - testX);
-      return distanceX < minDistance;
-    });
-    
-    if (overlappingViruses.length === 0) {
-      console.log(`바이러스 위치 조정 성공: x=${testX.toFixed(1)}`);
-      return { ...newVirus, x: testX };
-    }
-  }
-  
-  // 모든 체계적 위치가 실패하면 랜덤 시도 (더 많은 시도)
-  console.log(`체계적 배치 실패, 랜덤 시도 시작`);
+  // 랜덤 위치 시도 (더 자연스러운 배치)
   let attempts = 0;
-  const maxAttempts = 200; // 시도 횟수 더 증가
+  const maxAttempts = 50; // 시도 횟수 줄임 (더 빠른 처리)
   
   while (attempts < maxAttempts) {
     let testX = getRandomX(screenWidth);
@@ -230,22 +211,49 @@ export const adjustVirusPosition = (
     attempts++;
   }
   
-  // 모든 시도가 실패하면 가장 멀리 떨어진 위치 찾기
-  console.log(`랜덤 시도 실패, 최적 위치 찾기 시작`);
-  let bestX = newVirus.x;
-  let maxMinDistance = 0;
+  // 랜덤 시도 실패 시 약간의 겹침을 허용하여 랜덤 위치 사용
+  console.log(`랜덤 시도 실패, 약간의 겹침 허용하여 랜덤 위치 사용`);
+  const relaxedMinDistance = 40; // 최소 거리 완화
   
-  for (let x = margin; x <= screenWidth - margin - virusSize; x += 10) {
-    const minDistToAnyVirus = Math.min(
-      ...nearbyViruses.map(virus => Math.abs(virus.x - x))
-    );
+  for (let i = 0; i < 20; i++) {
+    let testX = getRandomX(screenWidth);
     
-    if (minDistToAnyVirus > maxMinDistance) {
-      maxMinDistance = minDistToAnyVirus;
-      bestX = x;
+    const overlappingViruses = nearbyViruses.filter(virus => {
+      const distanceX = Math.abs(virus.x - testX);
+      return distanceX < relaxedMinDistance;
+    });
+    
+    if (overlappingViruses.length === 0) {
+      console.log(`완화된 조건으로 위치 조정 성공: x=${testX.toFixed(1)}`);
+      return { ...newVirus, x: testX };
     }
   }
   
-  console.log(`최적 위치 선택: x=${bestX.toFixed(1)}, 최소거리=${maxMinDistance.toFixed(1)}`);
-  return { ...newVirus, x: bestX };
+  // 모든 시도가 실패하면 원래 랜덤 위치 사용 (겹침 허용)
+  console.log(`모든 시도 실패, 원래 랜덤 위치 사용 (겹침 허용)`);
+  return { ...newVirus, x: getRandomX(screenWidth) };
+};
+
+// 한강 오염도에 따른 색상 계산
+export const getRiverColor = (virusesReachedBottom: number, maxAllowed: number): string => {
+  const pollutionLevel = Math.min(virusesReachedBottom / maxAllowed, 1); // 0~1 사이의 오염도
+  
+  // 기본 한강 색상 (파란색)
+  const baseColor = { r: 74, g: 144, b: 226 }; // #4a90e2
+  
+  // 오염된 색상 (녹색)
+  const pollutedColor = { r: 34, g: 139, b: 34 }; // #228b22
+  
+  // 오염도에 따라 색상 보간
+  const r = Math.round(baseColor.r + (pollutedColor.r - baseColor.r) * pollutionLevel);
+  const g = Math.round(baseColor.g + (pollutedColor.g - baseColor.g) * pollutionLevel);
+  const b = Math.round(baseColor.b + (pollutedColor.b - baseColor.b) * pollutionLevel);
+  
+  return `rgb(${r}, ${g}, ${b})`;
+};
+
+// 한강 오염도에 따른 투명도 계산
+export const getRiverOpacity = (virusesReachedBottom: number, maxAllowed: number): number => {
+  const pollutionLevel = Math.min(virusesReachedBottom / maxAllowed, 1);
+  return 0.4 + (pollutionLevel * 0.4); // 0.4 ~ 0.8 사이의 투명도
 };

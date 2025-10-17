@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 import Virus from './Virus';
 import { GameState, Virus as VirusType } from '@/types/game';
 import { 
@@ -15,7 +16,9 @@ import {
   getRandomX,
   adjustVirusPosition,
   getVirusBatchSize,
-  canMakeValidSum
+  canMakeValidSum,
+  getRiverColor,
+  getRiverOpacity
 } from '@/lib/gameLogic';
 
 interface GameBoardProps {
@@ -212,13 +215,13 @@ const GameBoard: React.FC<GameBoardProps> = ({
     };
   }, [gameState.isPaused, gameState.isGameOver, screenSize.width, screenSize.height]);
 
-  // 라운드 완료 체크 (50개 바이러스 생성 완료 시 라운드 완료 상태로 변경)
+  // 라운드 완료 체크 (동적 바이러스 개수 생성 완료 시 라운드 완료 상태로 변경)
   useEffect(() => {
     if (gameState.virusesSpawned >= gameState.virusesToSpawn && 
         !gameState.isGameOver && 
         !gameState.isPaused &&
         !gameState.isRoundComplete) {
-      console.log('라운드 완료: 50개 바이러스 생성 완료, 라운드 완료 상태로 변경');
+      console.log(`라운드 완료: ${gameState.virusesToSpawn}개 바이러스 생성 완료, 라운드 완료 상태로 변경`);
       onGameActionRef.current({ type: 'ROUND_COMPLETE' });
     }
   }, [gameState.virusesSpawned, gameState.virusesToSpawn, gameState.isGameOver, gameState.isPaused, gameState.isRoundComplete]);
@@ -254,18 +257,23 @@ const GameBoard: React.FC<GameBoardProps> = ({
       }}
     >
 
-      {/* 한강 배경 */}
-      <div className="absolute bottom-0 w-full h-48 bg-gradient-to-t from-han-river to-transparent">
-        {/* 한강 물결 효과 */}
+      {/* 한강 배경 - 오염도에 따라 색상 변화 */}
+      <div 
+        className="absolute bottom-0 w-full h-48 bg-gradient-to-t to-transparent"
+        style={{
+          background: `linear-gradient(to top, ${getRiverColor(gameState.virusesReachedBottom, gameState.maxVirusesAllowed)} ${getRiverOpacity(gameState.virusesReachedBottom, gameState.maxVirusesAllowed) * 100}%, transparent 0%)`
+        }}
+      >
+        {/* 한강 물결 효과 - 오염도에 따라 색상 변화 */}
         <motion.div
           className="w-full h-full"
           style={{
             backgroundImage: `
               linear-gradient(90deg, 
                 transparent 0%, 
-                rgba(255,255,255,0.1) 25%, 
-                rgba(255,255,255,0.2) 50%, 
-                rgba(255,255,255,0.1) 75%, 
+                rgba(255,255,255,${0.1 + (gameState.virusesReachedBottom / gameState.maxVirusesAllowed) * 0.1}) 25%, 
+                rgba(255,255,255,${0.2 + (gameState.virusesReachedBottom / gameState.maxVirusesAllowed) * 0.2}) 50%, 
+                rgba(255,255,255,${0.1 + (gameState.virusesReachedBottom / gameState.maxVirusesAllowed) * 0.1}) 75%, 
                 transparent 100%
               )
             `,
@@ -280,17 +288,12 @@ const GameBoard: React.FC<GameBoardProps> = ({
           }}
         />
         
-        {/* 한강 반사 효과 */}
+        {/* 한강 반사 효과 - 오염도에 따라 색상 변화 */}
         <motion.div
           className="absolute top-0 w-full h-full"
           style={{
-            backgroundImage: `
-              linear-gradient(180deg, 
-                rgba(74, 144, 226, 0.3) 0%, 
-                rgba(74, 144, 226, 0.1) 50%, 
-                transparent 100%
-              )
-            `,
+            backgroundColor: getRiverColor(gameState.virusesReachedBottom, gameState.maxVirusesAllowed),
+            opacity: 0.2 + (gameState.virusesReachedBottom / gameState.maxVirusesAllowed) * 0.3,
           }}
           animate={{
             opacity: [0.3, 0.6, 0.3],
@@ -303,43 +306,65 @@ const GameBoard: React.FC<GameBoardProps> = ({
         />
       </div>
 
-      {/* 국회의사당 배경 (한강 너머 멀리서 보이는 형태) */}
-      <div className="absolute bottom-48 w-full h-40 flex items-end justify-center">
+      {/* 국회의사당 배경 (한강 위에 배치) - 숨김 처리 */}
+      <div className="absolute bottom-56 w-full h-40 flex items-end justify-center hidden">
         {/* 국회의사당 건물 (실제 모습 형상화) */}
         <motion.div
           className="relative"
           style={{
-            filter: `brightness(${Math.max(0.3, 1 - gameState.virusesReachedBottom * 0.15)})`,
+            filter: `brightness(${Math.max(0.5, 1 - gameState.virusesReachedBottom * 0.1)})`,
             transform: `translateY(${gameState.virusesReachedBottom * 2}px) rotate(${gameState.virusesReachedBottom * 0.5}deg)`,
-            opacity: 0.7, // 멀리서 보이는 효과
+            opacity: 0.9, // 더 선명하게 보이도록 조정
           }}
         >
-          {/* 국회의사당 이미지 */}
-          <img src="/images/pillar1.png" alt="국회의사당" className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-52 z-50" />
+          {/* 국회의사당 이미지 - 다시 시도 */}
+          <img 
+            src="/images/pillar1.png" 
+            alt="국회의사당" 
+            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50"
+            style={{ 
+              width: 'auto',
+              height: 'auto',
+              maxWidth: '384px',
+              maxHeight: '208px',
+              minWidth: '200px',
+              minHeight: '100px',
+              objectFit: 'contain',
+              border: '2px solid #654321',
+              borderRadius: '8px',
+              boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
+              backgroundColor: '#8B4513'
+            }}
+            onLoad={() => console.log('국회의사당 이미지 로드 성공')}
+            onError={(e) => {
+              console.error('국회의사당 이미지 로드 실패:', e);
+              // 이미지 로드 실패 시 대체 텍스트 표시
+              const target = e.target as HTMLImageElement;
+              target.style.display = 'none';
+              const fallback = document.createElement('div');
+              fallback.innerHTML = '🏛️ 국회의사당';
+              fallback.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 384px;
+                height: 208px;
+                background: linear-gradient(45deg, #8B4513, #A0522D, #CD853F);
+                border: 3px solid #654321;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: white;
+                font-size: 24px;
+                font-weight: bold;
+                z-index: 50;
+              `;
+              target.parentNode?.appendChild(fallback);
+            }}
+          />
           
-          {/* 태극기 */}
-          <motion.div
-            className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-4 h-3 bg-white border border-gray-300 shadow-lg"
-            animate={{
-              rotate: [0, 2, -2, 0],
-            }}
-            transition={{
-              duration: 3,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          >
-            {/* 태극 문양 */}
-            <div className="absolute top-0 left-0 w-3 h-2 bg-red-500 rounded-tl-full rounded-bl-full"></div>
-            <div className="absolute bottom-0 right-0 w-3 h-2 bg-blue-500 rounded-tr-full rounded-br-full"></div>
-            {/* 건곤 팔괘 */}
-            <div className="absolute top-0 right-0 w-1 h-0.5 bg-black"></div>
-            <div className="absolute top-0.5 right-0 w-1 h-0.5 bg-black"></div>
-            <div className="absolute top-1 right-0 w-1 h-0.5 bg-black"></div>
-            <div className="absolute bottom-0 left-0 w-1 h-0.5 bg-black"></div>
-            <div className="absolute bottom-0.5 left-0 w-1 h-0.5 bg-black"></div>
-            <div className="absolute bottom-1 left-0 w-1 h-0.5 bg-black"></div>
-          </motion.div>
         </motion.div>
       </div>
 
@@ -401,7 +426,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              <p className="text-xl mb-2">50개 바이러스 생성 완료!</p>
+              <p className="text-xl mb-2">{gameState.virusesToSpawn}개 바이러스 생성 완료!</p>
               <p className="text-lg mb-2">현재 점수: <span className="text-virus-green font-bold">{gameState.score.toLocaleString()}</span></p>
               <p className="text-lg mb-2">최대 콤보: <span className="text-virus-blue font-bold">{gameState.combo}</span></p>
               <p className="text-sm text-gray-300">다음 라운드에서는 바이러스가 더 빨라집니다!</p>
