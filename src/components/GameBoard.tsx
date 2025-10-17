@@ -206,20 +206,21 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
         // 바이러스 추가 후 10이나 20을 만들 수 있는지 확인
         setTimeout(() => {
-          const updatedViruses = [...currentState.viruses, adjustedVirus];
-          if (!canMakeValidSum(updatedViruses) && updatedViruses.length >= 3) {
+          // 최신 상태를 다시 가져와서 확인
+          const latestState = gameStateRef.current;
+          if (!canMakeValidSum(latestState.viruses) && latestState.viruses.length >= 3) {
             console.log('추가 바이러스 생성: 10이나 20을 만들 수 없음');
             
             // 추가 바이러스 생성
             const additionalVirus = createVirus(
               `virus-${virusIdCounterRef.current++}`,
               getRandomX(screenSize.width),
-              getVirusSpeed(currentState.round)
+              getVirusSpeed(latestState.round)
             );
 
             const adjustedAdditionalVirus = adjustVirusPosition(
               additionalVirus, 
-              updatedViruses, 
+              latestState.viruses, 
               screenSize.width
             );
 
@@ -230,7 +231,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
               payload: { virus: adjustedAdditionalVirus }
             });
           }
-        }, 100); // 100ms 후에 확인
+        }, 200); // 200ms 후에 확인 (상태 업데이트 시간 고려)
       }, 1000); // 1초마다 고정
     };
 
