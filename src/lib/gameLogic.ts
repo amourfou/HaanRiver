@@ -64,12 +64,58 @@ export const canMakeValidSum = (viruses: Virus[]): boolean => {
   return false;
 };
 
-// 바이러스 위치 업데이트 (낙하)
-export const updateVirusPositions = (viruses: Virus[], deltaTime: number): Virus[] => {
-  return viruses.map(virus => ({
+// 바이러스 위치 업데이트 (낙하 + 겹침 방지)
+export const updateVirusPositions = (viruses: Virus[], deltaTime: number, screenWidth: number = 0): Virus[] => {
+  let updatedViruses = viruses.map(virus => ({
     ...virus,
     y: virus.y + virus.speed * deltaTime,
   }));
+
+  // 바이러스들이 서로 겹치지 않도록 위치 조정
+  if (screenWidth > 0) {
+    updatedViruses = preventVirusOverlap(updatedViruses, screenWidth);
+  }
+
+  return updatedViruses;
+};
+
+// 바이러스 겹침 방지 함수
+export const preventVirusOverlap = (viruses: Virus[], screenWidth: number): Virus[] => {
+  const minDistance = 50; // 최소 거리
+  const adjustedViruses = [...viruses];
+
+  for (let i = 0; i < adjustedViruses.length; i++) {
+    for (let j = i + 1; j < adjustedViruses.length; j++) {
+      const virus1 = adjustedViruses[i];
+      const virus2 = adjustedViruses[j];
+      
+      // 같은 높이대에 있는 바이러스들만 체크 (y 차이가 100px 이내)
+      if (Math.abs(virus1.y - virus2.y) < 100) {
+        const distanceX = Math.abs(virus1.x - virus2.x);
+        
+        if (distanceX < minDistance) {
+          // 겹치는 경우 더 오래된 바이러스(더 위에 있는)를 옆으로 이동
+          if (virus1.y < virus2.y) {
+            // virus1이 더 위에 있으면 virus1을 이동
+            const direction = virus1.x < virus2.x ? -1 : 1;
+            adjustedViruses[i] = {
+              ...virus1,
+              x: Math.max(30, Math.min(screenWidth - 78, virus1.x + direction * (minDistance - distanceX + 10)))
+            };
+          } else {
+            // virus2가 더 위에 있으면 virus2를 이동
+            const direction = virus2.x < virus1.x ? -1 : 1;
+            adjustedViruses[j] = {
+              ...virus2,
+              x: Math.max(30, Math.min(screenWidth - 78, virus2.x + direction * (minDistance - distanceX + 10)))
+            };
+          }
+        }
+      }
+    }
+  }
+
+  return adjustedViruses;
 };
 
 // 화면 밖으로 나간 바이러스 제거
@@ -88,9 +134,9 @@ export const checkVirusReachedBottom = (virus: Virus, screenHeight: number): boo
   return virusBottom >= screenHeight; // 바이러스 하단이 화면 끝에 닿았을 때
 };
 
-// 라운드에 따른 바이러스 생성 속도 계산 (1초마다 1개씩)
+// 라운드에 따른 바이러스 생성 속도 계산 (1.5초마다 1개씩)
 export const getVirusSpawnRate = (round: number): number => {
-  return 1000; // 항상 1초마다 1개씩 생성
+  return 1500; // 1.5초마다 1개씩 생성으로 겹침 방지
 };
 
 // 라운드에 따른 바이러스 낙하 속도 계산 (1초에 12px)
@@ -128,9 +174,9 @@ export const adjustVirusPosition = (
   existingViruses: Virus[], 
   screenWidth: number
 ): Virus => {
-  const minDistance = 60; // 최소 거리 (바이러스 크기 48px + 여유공간 12px)
+  const minDistance = 70; // 최소 거리 증가 (바이러스 크기 48px + 여유공간 22px)
   const virusSize = 48; // 바이러스 크기
-  const margin = 24; // 화면 가장자리 여백
+  const margin = 30; // 화면 가장자리 여백 증가
   
   console.log(`바이러스 위치 조정 시작: 새 바이러스 x=${newVirus.x}, 기존 바이러스 수=${existingViruses.length}, 화면 너비=${screenWidth}`);
   
@@ -139,17 +185,20 @@ export const adjustVirusPosition = (
     return newVirus;
   }
 
-  // 체계적으로 위치 배치: 화면을 60px 간격으로 나누어 배치
+  // 현재 화면 상단 근처의 바이러스들만 고려 (y < 200인 바이러스들)
+  const nearbyViruses = existingViruses.filter(virus => virus.y < 200);
+  
+  // 체계적으로 위치 배치: 화면을 70px 간격으로 나누어 배치
   const availablePositions = [];
   for (let x = margin; x <= screenWidth - margin - virusSize; x += minDistance) {
     availablePositions.push(x);
   }
   
-  console.log(`사용 가능한 위치들: ${availablePositions.length}개`);
+  console.log(`사용 가능한 위치들: ${availablePositions.length}개, 근처 바이러스: ${nearbyViruses.length}개`);
   
   // 사용 가능한 위치 중에서 겹치지 않는 위치 찾기
   for (const testX of availablePositions) {
-    const overlappingViruses = existingViruses.filter(virus => {
+    const overlappingViruses = nearbyViruses.filter(virus => {
       const distanceX = Math.abs(virus.x - testX);
       return distanceX < minDistance;
     });
@@ -160,15 +209,15 @@ export const adjustVirusPosition = (
     }
   }
   
-  // 모든 체계적 위치가 실패하면 랜덤 시도
+  // 모든 체계적 위치가 실패하면 랜덤 시도 (더 많은 시도)
   console.log(`체계적 배치 실패, 랜덤 시도 시작`);
   let attempts = 0;
-  const maxAttempts = 100; // 시도 횟수 대폭 증가
+  const maxAttempts = 200; // 시도 횟수 더 증가
   
   while (attempts < maxAttempts) {
     let testX = getRandomX(screenWidth);
     
-    const overlappingViruses = existingViruses.filter(virus => {
+    const overlappingViruses = nearbyViruses.filter(virus => {
       const distanceX = Math.abs(virus.x - testX);
       return distanceX < minDistance;
     });
@@ -181,7 +230,22 @@ export const adjustVirusPosition = (
     attempts++;
   }
   
-  // 모든 시도가 실패하면 원래 위치 사용 (기존 바이러스들이 떨어져서 공간이 생길 때까지 기다림)
-  console.log(`바이러스 위치 조정 실패: 최대 시도 횟수 초과, 원래 위치 사용`);
-  return { ...newVirus, x: newVirus.x };
+  // 모든 시도가 실패하면 가장 멀리 떨어진 위치 찾기
+  console.log(`랜덤 시도 실패, 최적 위치 찾기 시작`);
+  let bestX = newVirus.x;
+  let maxMinDistance = 0;
+  
+  for (let x = margin; x <= screenWidth - margin - virusSize; x += 10) {
+    const minDistToAnyVirus = Math.min(
+      ...nearbyViruses.map(virus => Math.abs(virus.x - x))
+    );
+    
+    if (minDistToAnyVirus > maxMinDistance) {
+      maxMinDistance = minDistToAnyVirus;
+      bestX = x;
+    }
+  }
+  
+  console.log(`최적 위치 선택: x=${bestX.toFixed(1)}, 최소거리=${maxMinDistance.toFixed(1)}`);
+  return { ...newVirus, x: bestX };
 };

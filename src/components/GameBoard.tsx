@@ -88,7 +88,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
   // 게임 루프
   useEffect(() => {
-    if (gameState.isPaused || gameState.isGameOver || screenSize.height === 0) {
+    if (gameState.isPaused || gameState.isGameOver || gameState.isRoundComplete || screenSize.height === 0) {
       return;
     }
 
@@ -99,7 +99,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       const currentViruses = gameStateRef.current.viruses;
 
       // 바이러스 위치 업데이트
-      const updatedViruses = updateVirusPositions(currentViruses, deltaTime);
+      const updatedViruses = updateVirusPositions(currentViruses, deltaTime, screenSize.width);
       
       
       // 바닥에 도달한 바이러스 확인
@@ -159,7 +159,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       spawnIntervalRef.current = null;
     }
 
-    if (gameState.isPaused || gameState.isGameOver || screenSize.height === 0) {
+    if (gameState.isPaused || gameState.isGameOver || gameState.isRoundComplete || screenSize.height === 0) {
       return;
     }
 
@@ -199,7 +199,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           payload: { virus: adjustedVirus }
         });
 
-      }, 1000); // 1초마다 고정
+      }, 1500); // 1.5초마다 고정 (겹침 방지)
     };
 
     startSpawning();
@@ -212,15 +212,16 @@ const GameBoard: React.FC<GameBoardProps> = ({
     };
   }, [gameState.isPaused, gameState.isGameOver, screenSize.width, screenSize.height]);
 
-  // 라운드 완료 체크 (50개 바이러스 생성 완료 시 다음 라운드)
+  // 라운드 완료 체크 (50개 바이러스 생성 완료 시 라운드 완료 상태로 변경)
   useEffect(() => {
     if (gameState.virusesSpawned >= gameState.virusesToSpawn && 
         !gameState.isGameOver && 
-        !gameState.isPaused) {
-      console.log('라운드 완료: 50개 바이러스 생성 완료, 다음 라운드로 이동');
-      onGameActionRef.current({ type: 'NEXT_ROUND' });
+        !gameState.isPaused &&
+        !gameState.isRoundComplete) {
+      console.log('라운드 완료: 50개 바이러스 생성 완료, 라운드 완료 상태로 변경');
+      onGameActionRef.current({ type: 'ROUND_COMPLETE' });
     }
-  }, [gameState.virusesSpawned, gameState.virusesToSpawn, gameState.isGameOver, gameState.isPaused]);
+  }, [gameState.virusesSpawned, gameState.virusesToSpawn, gameState.isGameOver, gameState.isPaused, gameState.isRoundComplete]);
 
   // 게임 오버 체크
   useEffect(() => {
@@ -378,27 +379,60 @@ const GameBoard: React.FC<GameBoardProps> = ({
       )}
 
       {/* 라운드 완료 오버레이 */}
-      {gameState.virusesSpawned >= gameState.virusesToSpawn && !gameState.isGameOver && (
+      {gameState.isRoundComplete && !gameState.isGameOver && (
         <motion.div
           className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
           <div className="text-center text-white">
-            <h2 className="text-4xl font-bold mb-4 text-virus-green">라운드 {gameState.round} 완료!</h2>
-            <p className="text-xl mb-4">50개 바이러스 생성 완료!</p>
-            <p className="text-lg mb-4">다음 라운드로 진행합니다...</p>
+            <motion.h2 
+              className="text-4xl font-bold mb-4 text-virus-green"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              라운드 {gameState.round} 완료! 🎉
+            </motion.h2>
+            
             <motion.div
-              className="w-16 h-16 border-4 border-virus-green border-t-transparent rounded-full mx-auto"
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            />
+              className="bg-black bg-opacity-50 backdrop-blur-sm rounded-lg p-6 mb-6"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              <p className="text-xl mb-2">50개 바이러스 생성 완료!</p>
+              <p className="text-lg mb-2">현재 점수: <span className="text-virus-green font-bold">{gameState.score.toLocaleString()}</span></p>
+              <p className="text-lg mb-2">최대 콤보: <span className="text-virus-blue font-bold">{gameState.combo}</span></p>
+              <p className="text-sm text-gray-300">다음 라운드에서는 바이러스가 더 빨라집니다!</p>
+            </motion.div>
+
+            <motion.button
+              className="bg-virus-green text-black font-bold text-xl px-8 py-4 rounded-lg hover:bg-opacity-80 transition-all duration-300 transform hover:scale-105"
+              onClick={() => onGameAction({ type: 'START_NEXT_ROUND' })}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              라운드 {gameState.round + 1} 시작 🚀
+            </motion.button>
+
+            <motion.p
+              className="text-sm text-gray-400 mt-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+            >
+              준비되면 버튼을 눌러주세요!
+            </motion.p>
           </div>
         </motion.div>
       )}
 
       {/* 일시정지 오버레이 */}
-      {gameState.isPaused && !gameState.isGameOver && (
+      {gameState.isPaused && !gameState.isGameOver && !gameState.isRoundComplete && (
         <motion.div
           className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center"
           initial={{ opacity: 0 }}

@@ -21,6 +21,7 @@ export const initialGameState: GameState = {
   virusesToSpawn: 50, // 라운드당 50개
   virusesReachedBottom: 0,
   maxVirusesAllowed: 5,
+  isRoundComplete: false,
 };
 
 export const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -113,7 +114,15 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       };
     }
 
-    case 'NEXT_ROUND': {
+    case 'ROUND_COMPLETE': {
+      return {
+        ...state,
+        isRoundComplete: true,
+        isPaused: true,
+      };
+    }
+
+    case 'START_NEXT_ROUND': {
       return {
         ...state,
         round: state.round + 1,
@@ -121,6 +130,10 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         virusesToSpawn: 50, // 라운드당 50개
         virusesReachedBottom: 0,
         gameSpeed: state.gameSpeed + 0.1,
+        isRoundComplete: false,
+        isPaused: false,
+        selectedViruses: [], // 선택된 바이러스 초기화
+        combo: 0, // 콤보 초기화
       };
     }
 

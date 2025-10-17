@@ -22,6 +22,7 @@ export interface GameState {
   virusesToSpawn: number;
   virusesReachedBottom: number;
   maxVirusesAllowed: number;
+  isRoundComplete: boolean;
 }
 
 export interface Player {
@@ -49,7 +50,8 @@ export type GameAction =
   | { type: 'REMOVE_VIRUS'; payload: { virusId: string } }
   | { type: 'UPDATE_VIRUSES'; payload: { viruses: Virus[] } }
   | { type: 'UPDATE_SCORE'; payload: { points: number } }
-  | { type: 'NEXT_ROUND' }
+  | { type: 'ROUND_COMPLETE' }
+  | { type: 'START_NEXT_ROUND' }
   | { type: 'VIRUS_REACHED_BOTTOM' }
   | { type: 'GAME_OVER' }
   | { type: 'PAUSE_GAME' }
