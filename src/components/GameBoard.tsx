@@ -112,7 +112,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         reachedBottomViruses.forEach(() => {
           onGameActionRef.current({ type: 'VIRUS_REACHED_BOTTOM' });
         });
-      }
+      }고
       
       // 바닥에 도달한 바이러스 제거
       const filteredViruses = updatedViruses.filter(virus => 
@@ -178,8 +178,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
           if (!canMakeValidSum(currentState.viruses)) {
             console.log('50개 제한 초과하지만 10이나 20을 만들 수 없어서 추가 생성');
           } else {
-            console.log('라운드 완료: 50개 바이러스 생성 완료');
-            clearInterval(spawnIntervalRef.current!);
+            console.log('라운드 완료: 50개 바이러스 생성 완료, 다음 라운드로 진행');
+            // clearInterval을 제거하여 다음 라운드에서 계속 생성되도록 함
             return;
           }
         }
@@ -245,16 +245,15 @@ const GameBoard: React.FC<GameBoardProps> = ({
     };
   }, [gameState.isPaused, gameState.isGameOver, screenSize.width, screenSize.height]);
 
-  // 라운드 완료 체크 (모든 바이러스 제거 시 다음 라운드)
+  // 라운드 완료 체크 (50개 바이러스 생성 완료 시 다음 라운드)
   useEffect(() => {
     if (gameState.virusesSpawned >= gameState.virusesToSpawn && 
-        gameState.viruses.length === 0 && 
         !gameState.isGameOver && 
         !gameState.isPaused) {
-      console.log('라운드 완료: 모든 바이러스 제거됨, 다음 라운드로 이동');
+      console.log('라운드 완료: 50개 바이러스 생성 완료, 다음 라운드로 이동');
       onGameActionRef.current({ type: 'NEXT_ROUND' });
     }
-  }, [gameState.virusesSpawned, gameState.virusesToSpawn, gameState.viruses.length, gameState.isGameOver, gameState.isPaused]);
+  }, [gameState.virusesSpawned, gameState.virusesToSpawn, gameState.isGameOver, gameState.isPaused]);
 
   // 게임 오버 체크
   useEffect(() => {
