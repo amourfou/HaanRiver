@@ -101,7 +101,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       // 바이러스 위치 업데이트
       const updatedViruses = updateVirusPositions(currentViruses, deltaTime);
       
-햣햣      
+      
       // 바닥에 도달한 바이러스 확인
       const reachedBottomViruses = updatedViruses.filter(virus => 
         checkVirusReachedBottom(virus, screenSize.height)
