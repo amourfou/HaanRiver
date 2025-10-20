@@ -182,7 +182,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           return;
         }
 
-        // 바이러스 1개씩 연속적으로 생성
+        // 바이러스 1개씩 연속적으로 생성 (화면 위에서 시작)
         const newVirus = createVirus(
           `virus-${virusIdCounterRef.current++}`,
           getRandomX(screenSize.width),
@@ -195,7 +195,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
           screenSize.width
         );
 
-        console.log(`바이러스 생성: ${adjustedVirus.id}, 숫자: ${adjustedVirus.number}, x: ${adjustedVirus.x.toFixed(1)}`);
+        console.log(`바이러스 생성: ${adjustedVirus.id}, 숫자: ${adjustedVirus.number}, x: ${adjustedVirus.x.toFixed(1)}, y: ${adjustedVirus.y.toFixed(1)}`);
 
         onGameActionRef.current({
           type: 'ADD_VIRUS',

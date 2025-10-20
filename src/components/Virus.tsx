@@ -22,7 +22,7 @@ const Virus: React.FC<VirusProps> = ({ virus, onTouch, screenHeight }) => {
       className="absolute flex items-center justify-center w-12 h-12 rounded-full text-white font-bold text-lg cursor-pointer select-none pointer-events-auto"
       style={{
         left: virus.x,
-        top: virus.y,
+        top: virus.y, // 원래 위치 그대로 사용
         backgroundColor: virus.color,
         boxShadow: virus.isSelected 
           ? `0 0 20px ${virus.color}, 0 0 40px ${virus.color}` 
