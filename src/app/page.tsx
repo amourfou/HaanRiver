@@ -37,6 +37,11 @@ export default function Home() {
     setShowStartScreen(true);
   };
 
+  const handleExit = () => {
+    dispatch({ type: 'RESET_GAME' });
+    setShowStartScreen(true);
+  };
+
   return (
     <div className="game-container">
       <AnimatePresence>
@@ -142,6 +147,7 @@ export default function Home() {
             gameState={gameState}
             onPause={handlePause}
             onResume={handleResume}
+            onExit={handleExit}
           />
         </>
       )}
