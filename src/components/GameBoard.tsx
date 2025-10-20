@@ -240,6 +240,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
     }
   }, [gameState.round, gameState.virusesSpawned, gameState.viruses.length]);
 
+
   if (screenSize.height === 0) {
     return <div className="w-full h-screen bg-gradient-to-b from-space-dark to-han-river" />;
   }
@@ -459,7 +460,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       {/* 일시정지 오버레이 */}
       {gameState.isPaused && !gameState.isGameOver && !gameState.isRoundComplete && (
         <motion.div
-          className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+          className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[60]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >

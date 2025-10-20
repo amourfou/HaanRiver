@@ -23,6 +23,7 @@ export interface GameState {
   virusesReachedBottom: number;
   maxVirusesAllowed: number;
   isRoundComplete: boolean;
+  highScore: number;
 }
 
 export interface Player {

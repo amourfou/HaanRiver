@@ -29,6 +29,9 @@ const GameUI: React.FC<GameUIProps> = ({ gameState, onPause, onResume, onExit })
             <div className="text-virus-green text-xl font-bold">
               {gameState.score.toLocaleString()}
             </div>
+            <div className="text-white text-xs">
+              최고: {gameState.highScore.toLocaleString()}
+            </div>
           </motion.div>
 
           {/* 라운드 */}
@@ -99,19 +102,6 @@ const GameUI: React.FC<GameUIProps> = ({ gameState, onPause, onResume, onExit })
       </div>
 
 
-      {/* 콤보 표시 */}
-      {gameState.combo > 0 && (
-        <motion.div
-          className="absolute top-20 right-4 bg-virus-green bg-opacity-90 backdrop-blur-sm rounded-lg px-4 py-2"
-          initial={{ scale: 0, rotate: -10 }}
-          animate={{ scale: 1, rotate: 0 }}
-          exit={{ scale: 0, rotate: 10 }}
-        >
-          <div className="text-black font-bold text-lg">
-            COMBO x{gameState.combo}!
-          </div>
-        </motion.div>
-      )}
 
       {/* 게임 안내 - 첫 번째 바이러스의 상단이 화면에 보이면 숨김 */}
       {gameState.viruses.length === 0 || (gameState.viruses.length > 0 && gameState.viruses[0].y < 0) && (

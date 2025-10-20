@@ -8,6 +8,15 @@ import {
   getVirusesPerRound
 } from './gameLogic';
 
+// 최고 점수 가져오기
+const getHighScore = (): number => {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('haanriver-highscore');
+    return saved ? parseInt(saved, 10) : 0;
+  }
+  return 0;
+};
+
 export const initialGameState: GameState = {
   viruses: [],
   score: 0,
@@ -23,6 +32,7 @@ export const initialGameState: GameState = {
   virusesReachedBottom: 0,
   maxVirusesAllowed: 5,
   isRoundComplete: false,
+  highScore: getHighScore(),
 };
 
 export const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -149,10 +159,17 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
     }
 
     case 'GAME_OVER': {
+      // 최고 점수 업데이트
+      const newHighScore = Math.max(state.score, state.highScore);
+      if (typeof window !== 'undefined' && newHighScore > state.highScore) {
+        localStorage.setItem('haanriver-highscore', newHighScore.toString());
+      }
+      
       return {
         ...state,
         isGameOver: true,
         isPaused: true,
+        highScore: newHighScore,
       };
     }
 
@@ -172,6 +189,13 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
 
     case 'RESET_GAME': {
       return initialGameState;
+    }
+
+    case 'RESET_COMBO': {
+      return {
+        ...state,
+        combo: 0,
+      };
     }
 
     default:
