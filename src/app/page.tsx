@@ -42,14 +42,20 @@ export default function Home() {
       <AnimatePresence>
         {showStartScreen && (
           <motion.div
-            className="absolute inset-0 bg-gradient-to-b from-space-dark to-han-river flex items-center justify-center z-50"
+            className="absolute inset-0 flex items-center justify-center z-50"
+            style={{
+              backgroundImage: 'url(/images/backgroundmenu.PNG)',
+              backgroundSize: '100% 100%',
+              backgroundPosition: 'center',
+              backgroundRepeat: 'no-repeat'
+            }}
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
 
             {/* 메인 타이틀 */}
-            <div className="text-center text-white z-10">
+            <div className="text-center text-white z-10" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
               <motion.h1
                 className="text-6xl md:text-8xl font-bold mb-4 gradient-text"
                 initial={{ y: -50, opacity: 0 }}
@@ -108,7 +114,7 @@ export default function Home() {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 1, duration: 0.8 }}
               >
-                <div className="bg-black bg-opacity-30 backdrop-blur-sm rounded-lg p-4">
+                <div className="bg-black bg-opacity-60 backdrop-blur-sm rounded-lg p-4">
                   <h3 className="font-bold text-white mb-2">게임 방법</h3>
                   <ul className="text-left space-y-1">
                     <li>• 바이러스를 터치하여 선택</li>
@@ -120,31 +126,6 @@ export default function Home() {
               </motion.div>
             </div>
 
-            {/* 한강 배경 */}
-            <div className="absolute bottom-0 w-full h-32 bg-gradient-to-t from-han-river to-transparent opacity-40">
-              <motion.div
-                className="w-full h-full"
-                style={{
-                  backgroundImage: `
-                    linear-gradient(90deg, 
-                      transparent 0%, 
-                      rgba(255,255,255,0.1) 25%, 
-                      rgba(255,255,255,0.2) 50%, 
-                      rgba(255,255,255,0.1) 75%, 
-                      transparent 100%
-                    )
-                  `,
-                }}
-                animate={{
-                  x: ['-100%', '100%'],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-              />
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
