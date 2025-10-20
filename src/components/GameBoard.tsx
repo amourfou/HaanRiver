@@ -474,6 +474,47 @@ const GameBoard: React.FC<GameBoardProps> = ({
           </div>
         </motion.div>
       )}
+
+      {/* 선택된 바이러스 합계 표시 - 화면 아래 */}
+      {gameState.selectedViruses.length > 0 && (
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 z-40 bg-black bg-opacity-70 backdrop-blur-sm p-2"
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 50, opacity: 0 }}
+        >
+          <div className="text-white text-sm mb-2 text-center">선택된 바이러스</div>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            {gameState.selectedViruses.map((virus, index) => (
+              <React.Fragment key={virus.id}>
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                  style={{ backgroundColor: virus.color }}
+                >
+                  {virus.number}
+                </div>
+                {index < gameState.selectedViruses.length - 1 && (
+                  <span className="text-white">+</span>
+                )}
+              </React.Fragment>
+            ))}
+            <span className="text-white">=</span>
+            <div
+              className={`px-3 py-1 rounded-full font-bold ${
+                gameState.selectedViruses.reduce((sum, v) => sum + v.number, 0) === 10 ||
+                gameState.selectedViruses.reduce((sum, v) => sum + v.number, 0) === 20
+                  ? 'bg-virus-green text-black'
+                  : 'bg-gray-600 text-white'
+              }`}
+            >
+              {gameState.selectedViruses.reduce((sum, v) => sum + v.number, 0)}
+            </div>
+          </div>
+          <div className="text-xs text-gray-300 text-center">
+            합계가 10 또는 20이 되면 바이러스가 제거됩니다!
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 };
