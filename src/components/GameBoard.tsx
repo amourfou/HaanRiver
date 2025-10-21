@@ -186,7 +186,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         const newVirus = createVirus(
           `virus-${virusIdCounterRef.current++}`,
           getRandomX(screenSize.width),
-          currentState.currentVirusSpeed * 2 // 미리 계산된 속도 사용
+          currentState.currentVirusSpeed // 미리 계산된 속도 사용
         );
 
         let adjustedVirus = adjustVirusPosition(

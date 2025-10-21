@@ -136,7 +136,11 @@ export const checkVirusReachedBottom = (virus: Virus, screenHeight: number): boo
 
 // 라운드에 따른 바이러스 생성 속도 계산 (1.5초마다 1개씩)
 export const getVirusSpawnRate = (round: number): number => {
-  return 1500; // 1.5초마다 1개씩 생성으로 겹침 방지
+  let spawnRate = 1500;
+  for (let i = 1; i < round; i++) {
+    spawnRate *= 0.85; // 이전 속도에서 15% 증가
+  }
+  return spawnRate; // 1.5초마다 1개씩 생성으로 겹침 방지
 };
 
 // 라운드에 따른 바이러스 낙하 속도 계산 (이전 속도에서 10% 증가)
