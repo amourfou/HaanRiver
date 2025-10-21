@@ -5,7 +5,8 @@ import {
   calculateScore,
   removeOffscreenViruses,
   checkGameOver,
-  getVirusesPerRound
+  getVirusesPerRound,
+  getVirusSpeed
 } from './gameLogic';
 
 // 최고 점수 가져오기
@@ -33,6 +34,7 @@ export const initialGameState: GameState = {
   maxVirusesAllowed: 5,
   isRoundComplete: false,
   highScore: getHighScore(),
+  currentVirusSpeed: 12 / 1000, // 라운드 1의 기본 속도
 };
 
 export const gameReducer = (state: GameState, action: GameAction): GameState => {
@@ -135,6 +137,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
 
     case 'START_NEXT_ROUND': {
       const nextRound = state.round + 1;
+      const newVirusSpeed = getVirusSpeed(nextRound); // 새 라운드의 속도 계산
       return {
         ...state,
         round: nextRound,
@@ -146,6 +149,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         isPaused: false,
         selectedViruses: [], // 선택된 바이러스 초기화
         combo: 0, // 콤보 초기화
+        currentVirusSpeed: newVirusSpeed, // 새 라운드의 속도 저장
       };
     }
 

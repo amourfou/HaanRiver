@@ -139,11 +139,17 @@ export const getVirusSpawnRate = (round: number): number => {
   return 1500; // 1.5초마다 1개씩 생성으로 겹침 방지
 };
 
-// 라운드에 따른 바이러스 낙하 속도 계산 (라운드당 10% 증가)
+// 라운드에 따른 바이러스 낙하 속도 계산 (이전 속도에서 10% 증가)
 export const getVirusSpeed = (round: number): number => {
   const baseSpeed = 12 / 1000; // 1초에 12px = 0.012px/ms
-  const speedMultiplier = Math.pow(1.1, round - 1); // 라운드당 10% 증가
-  return baseSpeed * speedMultiplier;
+  let currentSpeed = baseSpeed;
+  
+  // 라운드 1부터 시작해서 이전 속도에서 10%씩 증가
+  for (let i = 1; i < round; i++) {
+    currentSpeed *= 1.15; // 이전 속도에서 10% 증가
+  }
+  
+  return currentSpeed;
 };
 
 // 라운드당 생성할 바이러스 수 (라운드당 10% 증가)

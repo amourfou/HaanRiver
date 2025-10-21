@@ -24,6 +24,7 @@ export interface GameState {
   maxVirusesAllowed: number;
   isRoundComplete: boolean;
   highScore: number;
+  currentVirusSpeed: number;
 }
 
 export interface Player {
