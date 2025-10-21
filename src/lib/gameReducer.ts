@@ -9,13 +9,9 @@ import {
   getVirusSpeed
 } from './gameLogic';
 
-// 최고 점수 가져오기
+// 최고 점수 가져오기 (기본값)
 const getHighScore = (): number => {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('haanriver-highscore');
-    return saved ? parseInt(saved, 10) : 0;
-  }
-  return 0;
+  return 0; // Supabase에서 사용자별 최고 점수를 가져오므로 기본값은 0
 };
 
 export const initialGameState: GameState = {
@@ -199,6 +195,14 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
       return {
         ...state,
         combo: 0,
+      };
+    }
+
+    case 'SET_HIGH_SCORE': {
+      console.log('🎯 SET_HIGH_SCORE 액션 실행:', action.payload.highScore);
+      return {
+        ...state,
+        highScore: action.payload.highScore,
       };
     }
 

@@ -9,15 +9,33 @@ interface GameUIProps {
   onPause: () => void;
   onResume: () => void;
   onExit: () => void;
+  currentUser?: { name: string; organization: string } | null;
 }
 
-const GameUI: React.FC<GameUIProps> = ({ gameState, onPause, onResume, onExit }) => {
+const GameUI: React.FC<GameUIProps> = ({ gameState, onPause, onResume, onExit, currentUser }) => {
   return (
     <div className="absolute top-0 left-0 right-0 z-[60]">
       {/* 전체 화면 너비의 상단 배경 */}
       <div className="w-full bg-black bg-opacity-70 backdrop-blur-sm p-2">
         {/* 상단 UI */}
         <div className="flex justify-between items-center">
+          {/* 사용자 정보 */}
+          {currentUser && (
+            <motion.div
+              className="px-2 py-1"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="text-virus-green text-lg font-bold">
+                {currentUser.name}
+              </div>
+              <div className="text-white text-xs">
+                {currentUser.organization}
+              </div>
+            </motion.div>
+          )}
+
           {/* 점수 */}
           <motion.div
             className="px-2 py-1"

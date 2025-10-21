@@ -34,6 +34,14 @@ export interface Player {
   isReady: boolean;
 }
 
+export interface User {
+  id: string;
+  name: string;
+  organization: string;
+  highScore: number;
+  createdAt: string;
+}
+
 export interface GameSession {
   id: string;
   roomId: string;
@@ -59,4 +67,5 @@ export type GameAction =
   | { type: 'PAUSE_GAME' }
   | { type: 'RESUME_GAME' }
   | { type: 'RESET_COMBO' }
+  | { type: 'SET_HIGH_SCORE'; payload: { highScore: number } }
   | { type: 'RESET_GAME' };
