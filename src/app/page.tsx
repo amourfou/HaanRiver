@@ -6,6 +6,7 @@ import GameBoard from '@/components/GameBoard';
 import GameUI from '@/components/GameUI';
 import UserRegistration from '@/components/UserRegistration';
 import MilitaryWarning from '@/components/MilitaryWarning';
+import ScoreBoard from '@/components/ScoreBoard';
 import { gameReducer, initialGameState } from '@/lib/gameReducer';
 import { GameAction, User } from '@/types/game';
 import { 
@@ -21,6 +22,7 @@ export default function Home() {
   const [showStartScreen, setShowStartScreen] = useState(true);
   const [showUserRegistration, setShowUserRegistration] = useState(false);
   const [showMilitaryWarning, setShowMilitaryWarning] = useState(false);
+  const [showScoreBoard, setShowScoreBoard] = useState(false);
   const [duplicateName, setDuplicateName] = useState('');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -118,6 +120,14 @@ export default function Home() {
     setShowUserRegistration(true); // 다시 등록 화면으로
   };
 
+  const handleShowScoreBoard = () => {
+    setShowScoreBoard(true);
+  };
+
+  const handleCloseScoreBoard = () => {
+    setShowScoreBoard(false);
+  };
+
   const startGame = () => {
     // 사용자 정보가 없으면 등록 화면 표시
     if (!currentUser) {
@@ -156,6 +166,15 @@ export default function Home() {
           <MilitaryWarning 
             onClose={handleCloseMilitaryWarning}
             duplicateName={duplicateName}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showScoreBoard && (
+          <ScoreBoard 
+            onClose={handleCloseScoreBoard}
+            currentUser={currentUser}
           />
         )}
       </AnimatePresence>
@@ -253,17 +272,31 @@ export default function Home() {
                 </>
               )}
 
-              <motion.button
-                className="bg-virus-green text-black font-bold text-xl px-8 py-4 rounded-lg hover:bg-opacity-80 transition-all duration-300 transform hover:scale-105"
-                onClick={startGame}
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.5 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-{currentUser ? '🎮 게임 시작' : '🎮 게임 시작'}
-              </motion.button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <motion.button
+                  className="bg-virus-green text-black font-bold text-xl px-8 py-4 rounded-lg hover:bg-opacity-80 transition-all duration-300 transform hover:scale-105"
+                  onClick={startGame}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.8, duration: 0.5 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {currentUser ? '🎮 게임 시작' : '🎮 게임 시작'}
+                </motion.button>
+
+                <motion.button
+                  className="bg-gray-700 text-white font-bold text-xl px-8 py-4 rounded-lg hover:bg-gray-600 transition-all duration-300 transform hover:scale-105"
+                  onClick={handleShowScoreBoard}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.9, duration: 0.5 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  🏆 점수보기
+                </motion.button>
+              </div>
 
               {/* 게임 설명 */}
               <motion.div

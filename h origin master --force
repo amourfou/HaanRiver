@@ -1,0 +1,5 @@
+[33m0930fb8[m[33m ([m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m fix: gameReducer.ts에서 checkGameOver import 추가
+[33me16e6ff[m fix: TypeScript 린터 오류 수정
+[33mf87f1da[m feat: 점수보기 화면 리뉴얼 - 주간순위, 내 순위, 전체 순위 탭 추가
+[33m20cf51f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m)[m feat: 사용자 등록 시스템 및 Supabase DB 연동 구현
+[33mdc8adf5[m fix: 바이러스 생성속도 이전 라운드 대비 15% 증가
