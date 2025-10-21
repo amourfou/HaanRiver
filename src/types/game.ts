@@ -57,4 +57,5 @@ export type GameAction =
   | { type: 'GAME_OVER' }
   | { type: 'PAUSE_GAME' }
   | { type: 'RESUME_GAME' }
+  | { type: 'RESET_COMBO' }
   | { type: 'RESET_GAME' };

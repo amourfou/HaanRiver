@@ -248,13 +248,12 @@ const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div 
       ref={gameBoardRef}
-      className="relative w-full h-screen overflow-hidden bg-gradient-to-b from-space-dark to-han-river"
+      className="relative w-full h-screen overflow-hidden"
       style={{ 
-        backgroundImage: `
-          radial-gradient(circle at 20% 80%, rgba(0, 136, 255, 0.1) 0%, transparent 50%),
-          radial-gradient(circle at 80% 20%, rgba(0, 255, 136, 0.1) 0%, transparent 50%),
-          linear-gradient(180deg, #0a0a0a 0%, #1a1a2e 50%, #4a90e2 100%)
-        `
+        backgroundImage: 'url(/images/background.PNG)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
       }}
     >
 
