@@ -251,7 +251,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       className="relative w-full h-screen overflow-hidden"
       style={{ 
         backgroundImage: 'url(/images/background.PNG)',
-        backgroundSize: 'cover',
+        backgroundSize: '100% 100%',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat'
       }}
@@ -383,11 +383,17 @@ const GameBoard: React.FC<GameBoardProps> = ({
       {/* 게임 오버 오버레이 */}
       {gameState.isGameOver && (
         <motion.div
-          className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-[100]"
+          className="absolute inset-0 flex items-center justify-center z-[100]"
+          style={{
+            backgroundImage: 'url(/images/background2.PNG)',
+            backgroundSize: '100% 100%',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
         >
-          <div className="text-center text-white">
+          <div className="bg-black bg-opacity-75 rounded-lg p-8 text-center text-white">
             <h2 className="text-4xl font-bold mb-4">게임 오버!</h2>
             <p className="text-xl mb-2">최종 점수: {gameState.score.toLocaleString()}</p>
             <p className="text-lg mb-2">도달한 라운드: {gameState.round}</p>
