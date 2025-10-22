@@ -78,41 +78,43 @@ const GameUI: React.FC<GameUIProps> = ({ gameState, onPause, onResume, onExit, c
             </div>
           </motion.div>
 
-          {/* 버튼들 */}
-          <div className="flex gap-2">
+          {/* 우측 상단 버튼들 */}
+          <div className="flex gap-1">
             {/* 일시정지 버튼 */}
             <motion.button
-              className="rounded-lg p-2 text-white hover:bg-white hover:bg-opacity-20 transition-colors"
+              className="rounded-full p-1.5 text-white hover:bg-white hover:bg-opacity-20 transition-colors"
               onClick={gameState.isPaused ? onResume : onPause}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              title={gameState.isPaused ? "재생" : "일시정지"}
             >
             {gameState.isPaused ? (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
               </svg>
             ) : (
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
             )}
             </motion.button>
 
-            {/* 나가기 버튼 */}
+            {/* 로그아웃 버튼 */}
             <motion.button
-              className="rounded-lg p-2 text-white hover:bg-red-500 hover:bg-opacity-20 transition-colors"
+              className="rounded-full p-1.5 text-white hover:bg-red-500 hover:bg-opacity-20 transition-colors"
               onClick={onExit}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.6 }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              title="로그아웃"
             >
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
               </svg>
             </motion.button>
           </div>

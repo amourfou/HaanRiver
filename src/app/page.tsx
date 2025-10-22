@@ -278,29 +278,40 @@ export default function Home() {
               {/* 사용자 정보 표시 */}
               {currentUser ? (
                 <motion.div
-                  className="mb-6 p-4 bg-black bg-opacity-50 rounded-lg backdrop-blur-sm border border-virus-green max-w-md mx-auto"
+                  className="mb-6 p-4 bg-black bg-opacity-50 rounded-lg backdrop-blur-sm border border-virus-green max-w-md mx-auto relative"
                   initial={{ y: -20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ delay: 0.3, duration: 0.6 }}
                 >
-                  <div className="text-virus-green text-lg font-bold mb-2 text-center">
+                  {/* 로그아웃 버튼 - 박스 내 우측 상단 */}
+                  <motion.button
+                    onClick={handleLogout}
+                    className="absolute top-2 right-2 rounded-full p-1.5 text-white hover:bg-red-500 hover:bg-opacity-20 transition-colors"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="로그아웃"
+                  >
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                    </svg>
+                  </motion.button>
+                  
+                  <div className="text-virus-green text-lg font-bold mb-3 text-center">
                     🎖️ 환영합니다!
                   </div>
-                  <div className="text-white text-base font-semibold mb-1 text-center break-words">
-                    {currentUser.name}님
+                  <div className="text-center text-sm">
+                    <span className="text-white font-semibold break-words">
+                      {currentUser.name}님
+                    </span>
+                    <span className="text-gray-300 mx-2">•</span>
+                    <span className="text-white break-words">
+                      {currentUser.organization}
+                    </span>
+                    <span className="text-gray-300 mx-2">•</span>
+                    <span className="text-virus-green font-semibold">
+                      최고: {currentUser.highScore.toLocaleString()}점
+                    </span>
                   </div>
-                  <div className="text-white text-sm text-center break-words">
-                    소속: {currentUser.organization}
-                  </div>
-                  <div className="text-virus-green text-sm font-semibold text-center mb-3">
-                    최고 점수: {currentUser.highScore.toLocaleString()}점
-                  </div>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full bg-red-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-500 transition-colors text-sm"
-                  >
-                    🚪 로그아웃
-                  </button>
                 </motion.div>
               ) : (
                 <motion.div

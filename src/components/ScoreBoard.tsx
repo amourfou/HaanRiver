@@ -27,6 +27,15 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 날짜 형식을 YY.MM.DD로 변환하는 함수
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear().toString().slice(-2); // 마지막 2자리
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${year}.${month}.${day}`;
+  };
+
   // 주간 시작일 계산 (매주 월요일)
   const getWeekStart = () => {
     const now = new Date();
@@ -61,7 +70,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
         name: item.users.name,
         organization: item.users.organization,
         score: item.score,
-        date: new Date(item.played_at).toLocaleDateString('ko-KR')
+        date: formatDate(item.played_at)
       })) || [];
 
       setWeeklyScores(scores);
@@ -94,7 +103,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
         name: currentUser.name,
         organization: currentUser.organization,
         score: item.score,
-        date: new Date(item.played_at).toLocaleDateString('ko-KR'),
+        date: formatDate(item.played_at),
         userId: currentUser.id
       })) || [];
 
@@ -129,7 +138,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
         name: item.users.name,
         organization: item.users.organization,
         score: item.score,
-        date: new Date(item.played_at).toLocaleDateString('ko-KR')
+        date: formatDate(item.played_at)
       })) || [];
 
       setOverallScores(scores);
@@ -162,11 +171,11 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-600">
-            <th className="text-left py-2 px-3 text-gray-300">순위</th>
+            <th className="text-center py-2 px-3 text-gray-300">순위</th>
             {showOrganization && <th className="text-left py-2 px-3 text-gray-300">이름</th>}
             {showOrganization && <th className="text-left py-2 px-3 text-gray-300">소속</th>}
-            <th className="text-left py-2 px-3 text-gray-300">점수</th>
-            <th className="text-left py-2 px-3 text-gray-300">날짜</th>
+            <th className="text-right py-2 px-3 text-gray-300">점수</th>
+            <th className="text-center py-2 px-3 text-gray-300">날짜</th>
           </tr>
         </thead>
         <tbody>
@@ -180,7 +189,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <td className="py-3 px-3 text-virus-green font-bold">
+              <td className="py-3 px-3 text-center text-virus-green font-bold">
                 {score.rank <= 3 ? (
                   <span className="text-yellow-400">
                     {score.rank === 1 ? '🥇' : score.rank === 2 ? '🥈' : '🥉'}
@@ -190,7 +199,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
                 )}
               </td>
               {showOrganization && (
-                <td className="py-3 px-3 text-white">
+                <td className="py-3 px-3 text-left text-white">
                   {score.name}
                   {score.userId === currentUser?.id && (
                     <span className="ml-2 text-virus-green">(나)</span>
@@ -198,12 +207,12 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
                 </td>
               )}
               {showOrganization && (
-                <td className="py-3 px-3 text-gray-300">{score.organization}</td>
+                <td className="py-3 px-3 text-left text-gray-300">{score.organization}</td>
               )}
-              <td className="py-3 px-3 text-virus-green font-bold">
+              <td className="py-3 px-3 text-right text-virus-green font-bold">
                 {score.score.toLocaleString()}
               </td>
-              <td className="py-3 px-3 text-gray-400">{score.date}</td>
+              <td className="py-3 px-3 text-center text-gray-400">{score.date}</td>
             </motion.tr>
           ))}
         </tbody>
@@ -286,7 +295,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
                       📅 이번 주 순위 (월요일 리셋)
                     </div>
                     <div className="text-gray-400 text-sm">
-                      {getWeekStart().toLocaleDateString('ko-KR')} ~ {new Date().toLocaleDateString('ko-KR')}
+                      {formatDate(getWeekStart().toISOString())} ~ {formatDate(new Date().toISOString())}
                     </div>
                   </div>
                   {weeklyScores.length > 0 ? (
