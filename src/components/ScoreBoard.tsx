@@ -219,19 +219,19 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
 
   return (
     <motion.div
-      className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-gray-900 z-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
       <motion.div
-        className="bg-gray-900 rounded-lg shadow-2xl w-full max-w-4xl mx-4 max-h-[90vh] overflow-hidden"
-        initial={{ scale: 0.8, opacity: 0 }}
+        className="h-full w-full flex flex-col"
+        initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.8, opacity: 0 }}
+        exit={{ scale: 0.95, opacity: 0 }}
       >
         {/* 헤더 */}
-        <div className="bg-gray-800 px-6 py-4 border-b border-gray-700">
+        <div className="bg-gray-800 px-6 py-4 border-b border-gray-700 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-white">🏆 점수보기</h2>
             <button
@@ -244,7 +244,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
         </div>
 
         {/* 탭 네비게이션 */}
-        <div className="flex border-b border-gray-700">
+        <div className="flex border-b border-gray-700 flex-shrink-0">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -262,7 +262,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
         </div>
 
         {/* 콘텐츠 영역 */}
-        <div className="p-6 max-h-96 overflow-y-auto">
+        <div className="flex-1 p-6 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-virus-green text-lg">로딩 중...</div>

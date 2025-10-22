@@ -183,7 +183,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
         }
 
         // 바이러스 1개씩 연속적으로 생성 (화면 위에서 시작)
-        const newVirus = createVirus(
+        const newVirus = createVirus( 
           `virus-${virusIdCounterRef.current++}`,
           getRandomX(screenSize.width),
           currentState.currentVirusSpeed // 미리 계산된 속도 사용

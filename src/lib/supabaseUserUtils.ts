@@ -30,6 +30,15 @@ export const saveUserIdToCookie = (userId: string): void => {
   document.cookie = `haanriver-user-id=${userId}; expires=${expires.toUTCString()}; path=/`;
 };
 
+// 쿠키에서 사용자 ID 삭제 (로그아웃)
+export const clearUserIdFromCookie = (): void => {
+  if (typeof window === 'undefined') return;
+  
+  // 과거 날짜로 설정하여 쿠키 삭제
+  const expires = new Date(0).toUTCString();
+  document.cookie = `haanriver-user-id=; expires=${expires}; path=/`;
+};
+
 // Supabase에서 사용자 정보 가져오기
 export const getUserFromSupabase = async (userId: string): Promise<User | null> => {
   try {
@@ -94,6 +103,45 @@ export const checkUserNameExists = async (name: string): Promise<boolean> => {
   }
 };
 
+// 이름으로 사용자 정보 가져오기
+export const getUserByNameFromSupabase = async (name: string): Promise<User | null> => {
+  try {
+    console.log('이름으로 사용자 조회 시작:', name);
+    
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('name', name)
+      .single();
+
+    if (error) {
+      console.error('이름으로 사용자 조회 오류:', error);
+      return null;
+    }
+
+    if (data) {
+      console.log('✅ 이름으로 사용자 데이터 조회 성공:', data);
+      
+      const user = {
+        id: data.id,
+        name: data.name,
+        organization: data.organization,
+        highScore: data.high_score || 0,
+        createdAt: data.created_at
+      };
+      
+      console.log('✅ 최종 사용자 객체:', user);
+      return user;
+    }
+
+    console.log('❌ 해당 이름의 사용자가 없습니다');
+    return null;
+  } catch (error) {
+    console.error('이름으로 사용자 조회 예외:', error);
+    return null;
+  }
+};
+
 // Supabase에 새 사용자 생성
 export const createUserInSupabase = async (name: string, organization: string): Promise<User | null> => {
   try {
@@ -139,7 +187,10 @@ export const createUserInSupabase = async (name: string, organization: string): 
     }
 
     return null;
-  } catch (error) {
+  } catch (error: any) {
+    if (error.message === 'DUPLICATE_NAME') {
+      throw error; // DUPLICATE_NAME 오류는 다시 throw하여 상위에서 처리
+    }
     console.error('사용자 생성 오류:', error);
     return null;
   }
