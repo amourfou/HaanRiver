@@ -49,7 +49,8 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
 
       // 합계가 10 또는 20이면 바이러스 제거
       if (isValidSum(sum)) {
-        const score = calculateScore(sum, state.combo);
+        const virusCount = newSelectedViruses.length; // 선택한 바이러스 개수
+        const score = calculateScore(virusCount, state.combo);
         const newViruses = state.viruses.filter(v => 
           !newSelectedViruses.some(selected => selected.id === v.id)
         ).map(v => ({ ...v, isSelected: false })); // 남은 바이러스들의 선택 상태 초기화

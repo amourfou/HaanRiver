@@ -18,12 +18,16 @@ export const createVirus = (id: string, x: number, speed: number): Virus => {
   const number = Math.floor(Math.random() * 9) + 1; // 1-9 랜덤 숫자
   const colorIndex = (number - 1) % VIRUS_COLORS.length;
   
+  // 5% 확률로 2배 빠른 속도
+  const isFastVirus = Math.random() < 0.05;
+  const finalSpeed = isFastVirus ? speed * 2 : speed;
+  
   return {
     id,
     number,
     x,
     y: -50, // 화면 위에서 시작
-    speed,
+    speed: finalSpeed,
     color: VIRUS_COLORS[colorIndex],
     isSelected: false,
   };
@@ -168,10 +172,18 @@ export const getVirusBatchSize = (round: number): number => {
   return 1; // 테스트용으로 바이러스 1개만 생성
 };
 
-// 점수 계산 (합계에 따른)
-export const calculateScore = (sum: number, combo: number): number => {
-  const baseScore = sum === 20 ? 50 : 20; // 20은 더 높은 점수
-  return baseScore * (1 + combo * 0.5); // 콤보 보너스
+// 점수 계산 (선택한 바이러스 개수에 따른)
+export const calculateScore = (virusCount: number, combo: number): number => {
+  // 바이러스 하나당 10점
+  const baseScore = virusCount * 10;
+  
+  // 3개부터 가산점: (개수 - 2)점 추가
+  const bonus = virusCount >= 3 ? virusCount - 2 : 0;
+  
+  // 콤보 보너스 적용
+  const totalScore = (baseScore + bonus) * (1 + combo * 0.5);
+  
+  return Math.floor(totalScore);
 };
 
 // 랜덤 X 위치 생성 (화면 너비 내)
