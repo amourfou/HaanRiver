@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
+import { playClickSound } from '@/lib/soundUtils';
 
 interface MilitaryWarningProps {
   onClose: () => void;
@@ -78,7 +79,10 @@ const MilitaryWarning: React.FC<MilitaryWarningProps> = ({ onClose, duplicateNam
           transition={{ delay: 0.8, duration: 0.5 }}
         >
           <motion.button
-            onClick={onClose}
+            onClick={() => {
+              playClickSound();
+              onClose();
+            }}
             className="bg-red-600 text-white font-bold text-xl py-4 px-8 rounded-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 border-2 border-red-400"
             whileHover={{ scale: 1.05, boxShadow: "0 0 20px rgba(239, 68, 68, 0.5)" }}
             whileTap={{ scale: 0.95 }}

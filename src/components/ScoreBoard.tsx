@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types/game';
+import { playClickSound } from '@/lib/soundUtils';
 
 interface ScoreData {
   rank: number;
@@ -244,7 +245,10 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
           <div className="flex items-center justify-between">
             <h2 className="text-2xl font-bold text-white">🏆 점수보기</h2>
             <button
-              onClick={onClose}
+              onClick={() => {
+                playClickSound();
+                onClose();
+              }}
               className="text-gray-400 hover:text-white transition-colors text-2xl"
             >
               ×
@@ -257,7 +261,10 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                playClickSound();
+                setActiveTab(tab.id);
+              }}
               className={`flex-1 py-4 px-6 text-center transition-colors ${
                 activeTab === tab.id
                   ? 'bg-virus-green text-black font-bold'

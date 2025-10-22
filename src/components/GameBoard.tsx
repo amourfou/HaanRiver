@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Virus from './Virus';
 import { GameState, Virus as VirusType } from '@/types/game';
+import { playMatchSound, playDroppedSound } from '@/lib/soundUtils';
 import { 
   createVirus, 
   updateVirusPositions, 
@@ -40,11 +41,39 @@ const GameBoard: React.FC<GameBoardProps> = ({
   const virusIdCounterRef = useRef<number>(0);
   const gameStateRef = useRef(gameState);
   const gameBoardRef = useRef<HTMLDivElement>(null);
+  const previousVirusCountRef = useRef(0);
+  const previousVirusesReachedBottomRef = useRef(0);
 
   // gameState ref 업데이트
   useEffect(() => {
     gameStateRef.current = gameState;
   }, [gameState]);
+
+  // 바이러스 제거 시 매치 사운드 재생
+  useEffect(() => {
+    const currentVirusCount = gameState.viruses.length;
+    const previousVirusCount = previousVirusCountRef.current;
+    
+    // 바이러스가 제거되었고 (개수가 줄어들었고), 게임이 진행 중일 때
+    if (currentVirusCount < previousVirusCount && gameState.isGameStarted && !gameState.isPaused) {
+      playMatchSound();
+    }
+    
+    previousVirusCountRef.current = currentVirusCount;
+  }, [gameState.viruses.length, gameState.isGameStarted, gameState.isPaused]);
+
+  // 바이러스가 물에 닿을 때 드롭 사운드 재생
+  useEffect(() => {
+    const currentVirusesReachedBottom = gameState.virusesReachedBottom;
+    const previousVirusesReachedBottom = previousVirusesReachedBottomRef.current;
+    
+    // 바이러스가 물에 닿았고 (개수가 증가했고), 게임이 진행 중일 때
+    if (currentVirusesReachedBottom > previousVirusesReachedBottom && gameState.isGameStarted && !gameState.isPaused) {
+      playDroppedSound();
+    }
+    
+    previousVirusesReachedBottomRef.current = currentVirusesReachedBottom;
+  }, [gameState.virusesReachedBottom, gameState.isGameStarted, gameState.isPaused]);
 
   // 화면 크기 설정
   useEffect(() => {

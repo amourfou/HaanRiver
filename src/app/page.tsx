@@ -20,6 +20,7 @@ import {
   updateUserScoreInSupabase,
   saveGameSession 
 } from '@/lib/supabaseUserUtils';
+import { playClickSound } from '@/lib/soundUtils';
 
 export default function Home() {
   const [gameState, dispatch] = useReducer(gameReducer, initialGameState);
@@ -150,17 +151,20 @@ export default function Home() {
   };
 
   const handleShowScoreBoard = () => {
+    playClickSound();
     setShowScoreBoard(true);
     setShowStartScreen(false); // 점수보기 화면이 보이도록 시작 화면 숨김
     // 게임은 시작하지 않음 - 점수보기만 표시
   };
 
   const handleCloseScoreBoard = () => {
+    playClickSound();
     setShowScoreBoard(false);
     setShowStartScreen(true);
   };
 
   const handleLogout = () => {
+    playClickSound();
     // 쿠키 삭제
     clearUserIdFromCookie();
     // 사용자 정보 초기화
@@ -190,6 +194,7 @@ export default function Home() {
   };
 
   const startGame = () => {
+    playClickSound();
     // 사용자 정보가 없으면 등록 화면 표시
     if (!currentUser) {
       setShowUserRegistration(true);

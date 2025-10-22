@@ -3,6 +3,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { GameState } from '@/types/game';
+import { playClickSound } from '@/lib/soundUtils';
 
 interface GameUIProps {
   gameState: GameState;
@@ -83,7 +84,10 @@ const GameUI: React.FC<GameUIProps> = ({ gameState, onPause, onResume, onExit, c
             {/* 일시정지 버튼 */}
             <motion.button
               className="rounded-full p-1.5 text-white hover:bg-white hover:bg-opacity-20 transition-colors"
-              onClick={gameState.isPaused ? onResume : onPause}
+              onClick={() => {
+                playClickSound();
+                gameState.isPaused ? onResume() : onPause();
+              }}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.5 }}
@@ -105,7 +109,10 @@ const GameUI: React.FC<GameUIProps> = ({ gameState, onPause, onResume, onExit, c
             {/* 로그아웃 버튼 */}
             <motion.button
               className="rounded-full p-1.5 text-white hover:bg-red-500 hover:bg-opacity-20 transition-colors"
-              onClick={onExit}
+              onClick={() => {
+                playClickSound();
+                onExit();
+              }}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.6 }}

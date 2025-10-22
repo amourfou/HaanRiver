@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { playClickSound } from '@/lib/soundUtils';
 
 interface UserRegistrationProps {
   onRegister: (name: string, organization: string) => void;
@@ -15,6 +16,7 @@ const UserRegistration: React.FC<UserRegistrationProps> = ({ onRegister, onCance
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim() && organization.trim()) {
+      playClickSound();
       onRegister(name.trim(), organization.trim());
     }
   };
@@ -104,7 +106,10 @@ const UserRegistration: React.FC<UserRegistrationProps> = ({ onRegister, onCance
             {onCancel && (
               <motion.button
                 type="button"
-                onClick={onCancel}
+                onClick={() => {
+                  playClickSound();
+                  onCancel();
+                }}
                 className="flex-1 bg-gray-600 text-white font-bold text-lg py-4 rounded-lg hover:bg-gray-700 transition-all duration-300 transform hover:scale-105"
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
