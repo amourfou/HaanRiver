@@ -32,10 +32,51 @@ export default function Home() {
   const [duplicateName, setDuplicateName] = useState('');
   const [existingUser, setExistingUser] = useState<User | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [availableHeight, setAvailableHeight] = useState(0);
 
   const handleGameAction = (action: GameAction) => {
     dispatch(action);
   };
+
+  // 실제 사용 가능한 높이 계산
+  useEffect(() => {
+    const updateAvailableHeight = () => {
+      let height = window.innerHeight;
+      
+      // Visual Viewport API 사용 (가장 정확한 방법)
+      if (window.visualViewport) {
+        height = window.visualViewport.height;
+        console.log('Visual Viewport 높이:', height);
+      }
+      
+      // 안전 영역 고려
+      const safeAreaTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-top') || '0');
+      const safeAreaBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0');
+      
+      const actualHeight = height - safeAreaTop - safeAreaBottom;
+      setAvailableHeight(Math.max(actualHeight, 400)); // 최소 높이 보장
+      
+      console.log(`메인 화면 사용 가능한 높이: ${actualHeight}px`);
+    };
+    
+    updateAvailableHeight();
+    
+    // 화면 크기 변경 이벤트 리스너
+    window.addEventListener('resize', updateAvailableHeight);
+    window.addEventListener('orientationchange', updateAvailableHeight);
+    
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateAvailableHeight);
+    }
+    
+    return () => {
+      window.removeEventListener('resize', updateAvailableHeight);
+      window.removeEventListener('orientationchange', updateAvailableHeight);
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', updateAvailableHeight);
+      }
+    };
+  }, []);
 
   // 컴포넌트 마운트 시 사용자 정보 확인
   useEffect(() => {
@@ -217,7 +258,12 @@ export default function Home() {
   };
 
   return (
-    <div className="game-container">
+    <div 
+      className="game-container"
+      style={{
+        height: availableHeight > 0 ? `${availableHeight}px` : '100vh' // 실제 사용 가능한 높이 사용
+      }}
+    >
       <AnimatePresence>
         {showUserRegistration && (
           <UserRegistration 
@@ -259,6 +305,7 @@ export default function Home() {
           <motion.div
             className="absolute inset-0 flex items-center justify-center z-50"
             style={{
+              height: availableHeight > 0 ? `${availableHeight}px` : '100vh', // 실제 사용 가능한 높이 사용
               backgroundImage: 'url(/images/backgroundmenu.PNG)',
               backgroundSize: '100% 100%',
               backgroundPosition: 'center',
