@@ -288,15 +288,15 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
 
   // 소속 순위 테이블 렌더링
   const renderOrganizationTable = (scores: OrganizationRanking[]) => (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto w-full">
+      <table className="w-full text-sm table-fixed">
         <thead>
           <tr className="border-b border-gray-600">
-            <th className="text-center py-2 px-3 text-gray-300">순위</th>
-            <th className="text-left py-2 px-3 text-gray-300">소속</th>
-            <th className="text-left py-2 px-3 text-gray-300">이름</th>
-            <th className="text-right py-2 px-3 text-gray-300">점수</th>
-            <th className="text-center py-2 px-3 text-gray-300">날짜</th>
+            <th className="text-center py-2 px-2 text-gray-300 whitespace-nowrap" style={{width: '15%'}}>순위</th>
+            <th className="text-left py-2 px-2 text-gray-300" style={{width: '25%'}}>소속</th>
+            <th className="text-left py-2 px-2 text-gray-300" style={{width: '20%'}}>이름</th>
+            <th className="text-right py-2 px-2 text-gray-300" style={{width: '20%'}}>점수</th>
+            <th className="text-center py-2 px-2 text-gray-300" style={{width: '20%'}}>날짜</th>
           </tr>
         </thead>
         <tbody>
@@ -310,7 +310,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
             >
-              <td className="py-3 px-3 text-center text-virus-green font-bold">
+              <td className="py-2 px-2 text-center text-virus-green font-bold">
                 {score.rank <= 3 ? (
                   <span className="text-yellow-400">
                     {score.rank === 1 ? '🥇' : score.rank === 2 ? '🥈' : '🥉'}
@@ -319,17 +319,24 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
                   score.rank
                 )}
               </td>
-              <td className="py-3 px-3 text-left text-gray-300">
+              <td className={`py-2 px-2 text-left truncate ${
+                score.organization === currentUser?.organization 
+                  ? 'text-virus-green font-bold' 
+                  : 'text-gray-300'
+              }`} title={score.organization}>
                 {score.organization}
-                {score.organization === currentUser?.organization && (
-                  <span className="ml-2 text-virus-green">(내 소속)</span>
-                )}
               </td>
-              <td className="py-3 px-3 text-left text-white">{score.name}</td>
-              <td className="py-3 px-3 text-right text-virus-green font-bold">
+              <td className={`py-2 px-2 text-left truncate ${
+                score.organization === currentUser?.organization 
+                  ? 'text-virus-green font-bold' 
+                  : 'text-white'
+              }`} title={score.name}>
+                {score.name}
+              </td>
+              <td className="py-2 px-2 text-right text-virus-green font-bold">
                 {score.score.toLocaleString()}
               </td>
-              <td className="py-3 px-3 text-center text-gray-400">{score.date}</td>
+              <td className="py-2 px-2 text-center text-gray-400">{score.date}</td>
             </motion.tr>
           ))}
         </tbody>
@@ -382,13 +389,13 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
                 playClickSound();
                 setActiveTab(tab.id);
               }}
-              className={`flex-1 py-4 px-6 text-center transition-colors ${
+              className={`flex-1 py-3 px-2 text-center transition-colors text-sm whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-virus-green text-black font-bold'
                   : 'text-gray-400 hover:text-white hover:bg-gray-800'
               }`}
             >
-              <span className="text-lg mr-2">{tab.icon}</span>
+              <span className="text-sm mr-1">{tab.icon}</span>
               {tab.label}
             </button>
           ))}
@@ -416,7 +423,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
                 >
                   <div className="mb-4 text-center">
                     <div className="text-virus-green font-bold text-lg mb-2">
-                      📅 이번 주 순위 (월요일 리셋)
+                      📅 이번 주 순위
                     </div>
                     <div className="text-gray-400 text-sm">
                       {formatDate(getWeekStart().toISOString())} ~ {formatDate(new Date().toISOString())}
