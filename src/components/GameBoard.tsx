@@ -85,53 +85,47 @@ const GameBoard: React.FC<GameBoardProps> = ({
     };
   }, []);
 
-  // 화면 크기 설정 - 모바일 네비게이션바 대응
+  // 화면 크기 설정 - 실제 사용 가능한 영역만 게임 영역으로 설정
   useEffect(() => {
     const updateScreenSize = () => {
       const gameBoardElement = gameBoardRef.current;
       
-      // Visual Viewport API 사용 (모바일 브라우저의 실제 뷰포트)
+      // Visual Viewport API로 실제 사용 가능한 영역 계산
       let availableHeight = window.innerHeight;
       let availableWidth = window.innerWidth;
+      let offsetTop = 0;
+      let offsetBottom = 0;
       
-      // Visual Viewport API 지원 확인
+      // Visual Viewport API 지원 확인 (가장 정확한 방법)
       if (window.visualViewport) {
         availableHeight = window.visualViewport.height;
         availableWidth = window.visualViewport.width;
-        console.log('Visual Viewport 사용:', { height: availableHeight, width: availableWidth });
+        offsetTop = window.visualViewport.offsetTop || 0;
+        offsetBottom = window.innerHeight - (window.visualViewport.offsetTop + window.visualViewport.height);
+        
+        console.log('Visual Viewport 정보:', {
+          height: availableHeight,
+          width: availableWidth,
+          offsetTop: offsetTop,
+          offsetBottom: offsetBottom,
+          innerHeight: window.innerHeight,
+          visualViewportHeight: window.visualViewport.height
+        });
       }
       
-      // 동적 뷰포트 높이 지원 확인
-      if (CSS.supports('height', '100dvh')) {
-        // 100dvh가 지원되면 그대로 사용
-        availableHeight = window.innerHeight;
-      }
-      
-      // iOS Safari 대응
-      if (CSS.supports('-webkit-touch-callout', 'none')) {
-        availableHeight = window.innerHeight;
-      }
-      
-      // 안전 영역 고려 (iPhone X 이상)
+      // 안전 영역 고려
+      const safeAreaTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-top') || '0');
       const safeAreaBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0');
       
-      // 네비게이션바 높이 추정 (일반적으로 56-60px)
-      const estimatedNavbarHeight = 60;
-      
-      // 모바일에서 네비게이션바 영역까지 포함하여 계산
-      if (window.innerWidth <= 768) {
-        availableHeight = Math.max(availableHeight, window.innerHeight + estimatedNavbarHeight);
-      }
-      
-      // 게임 보드 요소의 실제 높이 사용
-      const gameBoardHeight = gameBoardElement?.clientHeight || availableHeight;
+      // 실제 사용 가능한 높이 계산 (상단 주소창과 하단 네비게이션바 제외)
+      const actualAvailableHeight = availableHeight - safeAreaTop - safeAreaBottom;
       
       setScreenSize({
         width: availableWidth,
-        height: Math.max(gameBoardHeight, availableHeight), // 더 큰 값 사용
+        height: Math.max(actualAvailableHeight, 400), // 최소 높이 보장
       });
       
-      console.log(`화면 크기 업데이트: window.innerHeight=${window.innerHeight}, visualViewport.height=${window.visualViewport?.height}, gameBoardHeight=${gameBoardHeight}, availableHeight=${availableHeight}, safeAreaBottom=${safeAreaBottom}`);
+      console.log(`실제 사용 가능한 영역: ${availableWidth}x${actualAvailableHeight}, offsetTop: ${offsetTop}, offsetBottom: ${offsetBottom}`);
     };
 
     // DOM이 렌더링된 후에 높이 측정
@@ -352,8 +346,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div 
       ref={gameBoardRef}
-      className="game-container relative w-full h-screen overflow-hidden"
+      className="game-container relative w-full overflow-hidden"
       style={{ 
+        height: `${screenSize.height}px`, // 실제 사용 가능한 높이만 사용
         backgroundImage: 'url(/images/background.PNG)',
         backgroundSize: '100% 100%',
         backgroundPosition: 'center',
@@ -365,7 +360,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       <div 
         className="absolute bottom-0 w-full bg-gradient-to-t to-transparent"
         style={{
-          height: 'min(192px, 25vh)', // 모바일에서 상대적 높이 사용
+          height: `${Math.min(192, screenSize.height * 0.25)}px`, // 실제 사용 가능한 높이의 25% 또는 최대 192px
           background: `linear-gradient(to top, ${getRiverColor(gameState.virusesReachedBottom, gameState.maxVirusesAllowed)} ${getRiverOpacity(gameState.virusesReachedBottom, gameState.maxVirusesAllowed) * 100}%, transparent 0%)`
         }}
       >
@@ -412,7 +407,10 @@ const GameBoard: React.FC<GameBoardProps> = ({
       </div>
 
       {/* 국회의사당 배경 (한강 위에 배치) - 숨김 처리 */}
-      <div className="absolute w-full flex items-end justify-center hidden" style={{ bottom: 'min(224px, 30vh)', height: 'min(160px, 20vh)' }}>
+      <div className="absolute w-full flex items-end justify-center hidden" style={{ 
+        bottom: `${Math.min(224, screenSize.height * 0.3)}px`, 
+        height: `${Math.min(160, screenSize.height * 0.2)}px` 
+      }}>
         {/* 국회의사당 건물 (실제 모습 형상화) */}
         <motion.div
           className="relative"
@@ -591,8 +589,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
         <motion.div
           className="absolute left-0 right-0 z-40 bg-black bg-opacity-70 backdrop-blur-sm p-2"
           style={{ 
-            bottom: 'max(env(safe-area-inset-bottom, 0px), 0px)',
-            paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)'
+            bottom: '0px', // 실제 사용 가능한 영역의 하단에 고정
+            paddingBottom: '8px'
           }}
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
