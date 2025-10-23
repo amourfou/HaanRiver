@@ -75,25 +75,57 @@ const GameBoard: React.FC<GameBoardProps> = ({
     previousVirusesReachedBottomRef.current = currentVirusesReachedBottom;
   }, [gameState.virusesReachedBottom, gameState.isGameStarted, gameState.isPaused]);
 
-  // 화면 크기 설정
+  // 화면 크기 설정 - 모바일 네비게이션바 대응
   useEffect(() => {
     const updateScreenSize = () => {
       const gameBoardElement = gameBoardRef.current;
-      const gameBoardHeight = gameBoardElement?.clientHeight || window.innerHeight;
+      
+      // 모바일 브라우저의 실제 사용 가능한 높이 계산
+      let availableHeight = window.innerHeight;
+      
+      // 동적 뷰포트 높이 지원 확인
+      if (CSS.supports('height', '100dvh')) {
+        availableHeight = window.innerHeight;
+      }
+      
+      // iOS Safari 대응
+      if (CSS.supports('-webkit-touch-callout', 'none')) {
+        availableHeight = window.innerHeight;
+      }
+      
+      // 안전 영역 고려 (iPhone X 이상)
+      const safeAreaBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0');
+      if (safeAreaBottom > 0) {
+        availableHeight -= safeAreaBottom;
+      }
+      
+      // 게임 보드 요소의 실제 높이 사용
+      const gameBoardHeight = gameBoardElement?.clientHeight || availableHeight;
       
       setScreenSize({
         width: window.innerWidth,
-        height: gameBoardHeight, // 실제 게임 보드 높이 사용
+        height: Math.min(gameBoardHeight, availableHeight), // 실제 사용 가능한 높이 사용
       });
-      console.log(`화면 크기 업데이트: window.innerHeight=${window.innerHeight}, gameBoardHeight=${gameBoardHeight}`);
+      
+      console.log(`화면 크기 업데이트: window.innerHeight=${window.innerHeight}, gameBoardHeight=${gameBoardHeight}, availableHeight=${availableHeight}, safeAreaBottom=${safeAreaBottom}`);
     };
 
     // DOM이 렌더링된 후에 높이 측정
     const timer = setTimeout(updateScreenSize, 100);
+    
+    // 화면 크기 변경 이벤트 리스너
     window.addEventListener('resize', updateScreenSize);
+    window.addEventListener('orientationchange', updateScreenSize);
+    
+    // 모바일 브라우저의 네비게이션바 표시/숨김 감지
+    window.addEventListener('resize', () => {
+      setTimeout(updateScreenSize, 100); // 네비게이션바 애니메이션 완료 후
+    });
+    
     return () => {
       clearTimeout(timer);
       window.removeEventListener('resize', updateScreenSize);
+      window.removeEventListener('orientationchange', updateScreenSize);
     };
   }, []);
 
@@ -288,8 +320,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       {/* 한강 배경 - 오염도에 따라 색상 변화 */}
       <div 
-        className="absolute bottom-0 w-full h-48 bg-gradient-to-t to-transparent"
+        className="absolute bottom-0 w-full bg-gradient-to-t to-transparent"
         style={{
+          height: 'min(192px, 25vh)', // 모바일에서 상대적 높이 사용
           background: `linear-gradient(to top, ${getRiverColor(gameState.virusesReachedBottom, gameState.maxVirusesAllowed)} ${getRiverOpacity(gameState.virusesReachedBottom, gameState.maxVirusesAllowed) * 100}%, transparent 0%)`
         }}
       >
@@ -336,7 +369,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
       </div>
 
       {/* 국회의사당 배경 (한강 위에 배치) - 숨김 처리 */}
-      <div className="absolute bottom-56 w-full h-40 flex items-end justify-center hidden">
+      <div className="absolute w-full flex items-end justify-center hidden" style={{ bottom: 'min(224px, 30vh)', height: 'min(160px, 20vh)' }}>
         {/* 국회의사당 건물 (실제 모습 형상화) */}
         <motion.div
           className="relative"
@@ -513,7 +546,11 @@ const GameBoard: React.FC<GameBoardProps> = ({
       {/* 선택된 바이러스 합계 표시 - 화면 아래 */}
       {gameState.selectedViruses.length > 0 && (
         <motion.div
-          className="absolute bottom-0 left-0 right-0 z-40 bg-black bg-opacity-70 backdrop-blur-sm p-2"
+          className="absolute left-0 right-0 z-40 bg-black bg-opacity-70 backdrop-blur-sm p-2"
+          style={{ 
+            bottom: 'max(env(safe-area-inset-bottom, 0px), 0px)',
+            paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)'
+          }}
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 50, opacity: 0 }}

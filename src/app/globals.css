@@ -27,14 +27,37 @@ html, body {
   background: #0a0a0a;
 }
 
-/* 게임 컨테이너 */
+/* CSS 변수로 안전 영역 설정 */
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
+}
+
+/* 게임 컨테이너 - 모바일 네비게이션바 대응 */
 .game-container {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh; /* 동적 뷰포트 높이 사용 */
   overflow: hidden;
+}
+
+/* 모바일 브라우저 네비게이션바 대응 */
+@supports (height: 100dvh) {
+  .game-container {
+    height: 100dvh; /* 동적 뷰포트 높이 */
+  }
+}
+
+/* iOS Safari 대응 */
+@supports (-webkit-touch-callout: none) {
+  .game-container {
+    height: -webkit-fill-available;
+  }
 }
 
 /* 바이러스 애니메이션 */
@@ -155,16 +178,40 @@ html, body {
   }
 }
 
-/* 반응형 디자인 */
+/* 모바일 브라우저 네비게이션바 대응 */
 @media (max-width: 768px) {
   .game-container {
     font-size: 14px;
+    /* 모바일에서 안전 영역 고려 */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
+  /* 모바일 터치 최적화 */
+  .game-container * {
+    touch-action: manipulation;
   }
 }
 
 @media (max-width: 480px) {
   .game-container {
     font-size: 12px;
+    /* 작은 화면에서 추가 패딩 */
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+  }
+}
+
+/* 모바일 브라우저별 특수 대응 */
+@supports (padding: max(0px)) {
+  .game-container {
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px);
+  }
+}
+
+/* Android Chrome 네비게이션바 대응 */
+@media screen and (max-width: 768px) {
+  .game-container {
+    height: 100vh;
+    height: calc(100vh - env(keyboard-inset-height, 0px));
   }
 }
 

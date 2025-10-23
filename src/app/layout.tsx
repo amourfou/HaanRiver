@@ -21,6 +21,7 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   themeColor: '#0a0a0a',
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({
@@ -34,6 +35,8 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+        <meta name="format-detection" content="telephone=no" />
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body>
