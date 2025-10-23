@@ -74,46 +74,30 @@ html, body {
   }
 }
 
-/* 강제 전체화면 모드 */
-.game-container {
-  /* 네비게이션바 영역까지 포함하여 전체 화면 사용 */
-  height: calc(100vh + 60px); /* 네비게이션바 높이만큼 추가 */
-  min-height: 100vh;
-}
-
-/* 모바일 브라우저 네비게이션바 완전 숨김 */
+/* 모바일 브라우저 네비게이션바 대응 - 안전한 방법 */
 @media screen and (max-width: 768px) {
   .game-container {
-    /* 네비게이션바가 숨겨진 상태의 높이 사용 */
-    height: calc(100vh + env(keyboard-inset-height, 60px));
-    /* 또는 고정 높이 사용 */
-    height: calc(100vh + 60px);
-    /* 최대 높이 제한 */
-    max-height: calc(100vh + 60px);
+    /* 기본 높이 유지하되, 네비게이션바 영역 고려 */
+    height: 100vh;
+    height: 100dvh; /* 동적 뷰포트 높이 우선 사용 */
+    min-height: 100vh;
+    
+    /* 네비게이션바가 나타나더라도 게임 영역이 가려지지 않도록 */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
   
-  /* 네비게이션바 영역까지 포함한 게임 보드 */
+  /* 게임 보드 내부 요소들 */
   .game-container > div {
     height: 100%;
     min-height: 100vh;
   }
 }
 
-/* Android Chrome 특별 대응 */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-  .game-container {
-    height: calc(100vh + 56px); /* Android 네비게이션바 높이 */
-    min-height: calc(100vh + 56px);
-  }
-}
-
-/* iOS Safari 특별 대응 */
+/* iPhone Chrome 특별 대응 */
 @supports (-webkit-touch-callout: none) and (max-width: 768px) {
   .game-container {
     height: -webkit-fill-available;
     min-height: -webkit-fill-available;
-    /* iOS에서 네비게이션바 영역까지 포함 */
-    height: calc(-webkit-fill-available + 60px);
   }
 }
 

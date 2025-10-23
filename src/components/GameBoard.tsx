@@ -75,37 +75,13 @@ const GameBoard: React.FC<GameBoardProps> = ({
     previousVirusesReachedBottomRef.current = currentVirusesReachedBottom;
   }, [gameState.virusesReachedBottom, gameState.isGameStarted, gameState.isPaused]);
 
-  // 모바일 브라우저 네비게이션바 강제 숨김
+  // 모바일 브라우저 네비게이션바 대응 (터치 이벤트 방해하지 않음)
   useEffect(() => {
-    const hideMobileNavbar = () => {
-      // 스크롤을 막아서 네비게이션바가 나타나지 않도록 함
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100%';
-      
-      // 터치 이벤트로 스크롤 방지
-      document.addEventListener('touchmove', (e) => {
-        e.preventDefault();
-      }, { passive: false });
-      
-      // Fullscreen API 시도 (지원되는 경우)
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(() => {
-          console.log('Fullscreen API not supported or blocked');
-        });
-      }
-    };
-    
-    hideMobileNavbar();
+    // 기본 스크롤 방지만 적용 (터치 이벤트는 방해하지 않음)
+    document.body.style.overflow = 'hidden';
     
     return () => {
-      // 정리
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
-      document.removeEventListener('touchmove', (e) => e.preventDefault());
     };
   }, []);
 
@@ -376,7 +352,7 @@ const GameBoard: React.FC<GameBoardProps> = ({
   return (
     <div 
       ref={gameBoardRef}
-      className="relative w-full h-screen overflow-hidden"
+      className="game-container relative w-full h-screen overflow-hidden"
       style={{ 
         backgroundImage: 'url(/images/background.PNG)',
         backgroundSize: '100% 100%',
