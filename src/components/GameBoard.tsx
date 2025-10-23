@@ -79,35 +79,9 @@ const GameBoard: React.FC<GameBoardProps> = ({
   useEffect(() => {
     // 기본 스크롤 방지만 적용 (터치 이벤트는 방해하지 않음)
     document.body.style.overflow = 'hidden';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
-    
-    // 강제 전체화면 모드 시도
-    const requestFullscreen = async () => {
-      try {
-        if (document.documentElement.requestFullscreen) {
-          await document.documentElement.requestFullscreen();
-        } else if ((document.documentElement as any).webkitRequestFullscreen) {
-          await (document.documentElement as any).webkitRequestFullscreen();
-        } else if ((document.documentElement as any).mozRequestFullScreen) {
-          await (document.documentElement as any).mozRequestFullScreen();
-        } else if ((document.documentElement as any).msRequestFullscreen) {
-          await (document.documentElement as any).msRequestFullscreen();
-        }
-      } catch (error) {
-        console.log('Fullscreen not supported or blocked:', error);
-      }
-    };
-    
-    // 페이지 로드 후 전체화면 시도
-    setTimeout(requestFullscreen, 100);
     
     return () => {
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
     };
   }, []);
 

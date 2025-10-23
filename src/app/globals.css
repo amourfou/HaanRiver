@@ -47,11 +47,6 @@ html, body {
   /* 모바일 브라우저 네비게이션바 강제 숨김 */
   overscroll-behavior: none;
   touch-action: manipulation;
-  /* 강제 전체화면 */
-  z-index: 9999;
-  /* 네비게이션바 영역까지 포함 */
-  height: calc(100vh + 80px);
-  min-height: calc(100vh + 80px);
 }
 
 /* 모바일 브라우저 네비게이션바 대응 */
@@ -79,55 +74,24 @@ html, body {
   }
 }
 
-/* 모든 모바일 브라우저 네비게이션바 강제 숨김 */
+/* 모바일 브라우저 네비게이션바 대응 - 간단한 방법 */
 @media screen and (max-width: 768px) {
   .game-container {
-    /* 네비게이션바 영역까지 포함한 전체 화면 */
-    height: calc(100vh + 80px) !important;
-    min-height: calc(100vh + 80px) !important;
-    max-height: calc(100vh + 80px) !important;
+    /* 기본 높이 유지하되, 네비게이션바 영역 고려 */
+    height: 100vh;
+    height: 100dvh; /* 동적 뷰포트 높이 우선 사용 */
+    min-height: 100vh;
     
-    /* 강제 전체화면 */
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    z-index: 9999 !important;
-  }
-  
-  /* 게임 보드 내부 요소들 */
-  .game-container > div {
-    height: 100% !important;
-    min-height: 100vh !important;
-  }
-  
-  /* 네비게이션바 영역까지 포함한 한강 배경 */
-  .game-container .absolute.bottom-0 {
-    bottom: -80px !important; /* 네비게이션바 영역까지 확장 */
-  }
-}
-
-/* Android Chrome 특별 대응 */
-@media screen and (max-width: 768px) and (orientation: portrait) {
-  .game-container {
-    height: calc(100vh + 56px) !important; /* Android 네비게이션바 높이 */
-    min-height: calc(100vh + 56px) !important;
-  }
-}
-
-/* iPhone Safari 특별 대응 */
-@supports (-webkit-touch-callout: none) and (max-width: 768px) {
-  .game-container {
-    height: calc(-webkit-fill-available + 80px) !important;
-    min-height: calc(-webkit-fill-available + 80px) !important;
+    /* 네비게이션바가 나타나더라도 게임 영역이 가려지지 않도록 */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
 /* iPhone Chrome 특별 대응 */
-@media screen and (max-width: 768px) and (-webkit-min-device-pixel-ratio: 2) {
+@supports (-webkit-touch-callout: none) and (max-width: 768px) {
   .game-container {
-    height: calc(100vh + 80px) !important;
-    min-height: calc(100vh + 80px) !important;
+    height: -webkit-fill-available;
+    min-height: -webkit-fill-available;
   }
 }
 
