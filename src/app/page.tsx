@@ -33,6 +33,7 @@ export default function Home() {
   const [existingUser, setExistingUser] = useState<User | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [availableHeight, setAvailableHeight] = useState(0);
+  const [offsetTop, setOffsetTop] = useState(0);
 
   const handleGameAction = (action: GameAction) => {
     dispatch(action);
@@ -67,6 +68,7 @@ export default function Home() {
       // 실제 사용 가능한 높이 계산 (상단 주소창과 하단 네비게이션바 제외)
       const actualHeight = height - safeAreaTop - safeAreaBottom;
       setAvailableHeight(Math.max(actualHeight, 400)); // 최소 높이 보장
+      setOffsetTop(offsetTop); // 상단 오프셋 저장
       
       console.log(`메인 화면 실제 사용 가능한 영역: ${window.innerWidth}x${actualHeight}, offsetTop: ${offsetTop}, offsetBottom: ${offsetBottom}`);
     };
@@ -320,8 +322,10 @@ export default function Home() {
       <AnimatePresence>
         {showStartScreen && !showUserRegistration && (
           <motion.div
-            className="absolute inset-0 flex items-center justify-center z-50"
+            className="absolute flex items-center justify-center z-50"
             style={{
+              top: offsetTop,
+              left: 0,
               height: availableHeight > 0 ? `${availableHeight}px` : '100vh', // 실제 사용 가능한 높이 사용
               width: '100vw',
               backgroundImage: 'url(/images/backgroundmenu.PNG)',
