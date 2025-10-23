@@ -15,15 +15,24 @@ interface ScoreData {
   userId?: string;
 }
 
+interface OrganizationRanking {
+  rank: number;
+  organization: string;
+  name: string;
+  score: number;
+  date: string;
+}
+
 interface ScoreBoardProps {
   onClose: () => void;
   currentUser: User | null;
 }
 
 export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
-  const [activeTab, setActiveTab] = useState<'weekly' | 'personal' | 'overall'>('weekly');
+  const [activeTab, setActiveTab] = useState<'weekly' | 'personal' | 'organization' | 'overall'>('weekly');
   const [weeklyScores, setWeeklyScores] = useState<ScoreData[]>([]);
   const [personalScores, setPersonalScores] = useState<ScoreData[]>([]);
+  const [organizationScores, setOrganizationScores] = useState<OrganizationRanking[]>([]);
   const [overallScores, setOverallScores] = useState<ScoreData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +126,59 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
     }
   };
 
+  // 소속별 최고점수 순위 조회
+  const fetchOrganizationScores = async () => {
+    try {
+      setLoading(true);
+      
+      // 각 소속별로 최고점수를 조회
+      const { data, error } = await supabase
+        .from('users')
+        .select(`
+          name,
+          organization,
+          high_score,
+          updated_at
+        `)
+        .order('high_score', { ascending: false });
+
+      if (error) throw error;
+
+      // 소속별로 그룹화하고 각 소속의 최고점수만 선택
+      const organizationMap = new Map<string, any>();
+      
+      data?.forEach((user: any) => {
+        const org = user.organization;
+        if (!organizationMap.has(org) || organizationMap.get(org).high_score < user.high_score) {
+          organizationMap.set(org, {
+            organization: org,
+            name: user.name,
+            score: user.high_score,
+            date: user.updated_at
+          });
+        }
+      });
+
+      // 점수순으로 정렬하고 순위 부여
+      const organizationScores: OrganizationRanking[] = Array.from(organizationMap.values())
+        .sort((a, b) => b.score - a.score)
+        .map((item, index) => ({
+          rank: index + 1,
+          organization: item.organization,
+          name: item.name,
+          score: item.score,
+          date: formatDate(item.date)
+        }));
+
+      setOrganizationScores(organizationScores);
+    } catch (err) {
+      setError('소속 점수를 불러오는데 실패했습니다.');
+      console.error('Organization scores fetch error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 전체 점수 조회
   const fetchOverallScores = async () => {
     try {
@@ -160,6 +222,9 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
         break;
       case 'personal':
         fetchPersonalScores();
+        break;
+      case 'organization':
+        fetchOrganizationScores();
         break;
       case 'overall':
         fetchOverallScores();
@@ -221,10 +286,62 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
     </div>
   );
 
+  // 소속 순위 테이블 렌더링
+  const renderOrganizationTable = (scores: OrganizationRanking[]) => (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b border-gray-600">
+            <th className="text-center py-2 px-3 text-gray-300">순위</th>
+            <th className="text-left py-2 px-3 text-gray-300">소속</th>
+            <th className="text-left py-2 px-3 text-gray-300">이름</th>
+            <th className="text-right py-2 px-3 text-gray-300">점수</th>
+            <th className="text-center py-2 px-3 text-gray-300">날짜</th>
+          </tr>
+        </thead>
+        <tbody>
+          {scores.map((score, index) => (
+            <motion.tr
+              key={`${score.rank}-${index}`}
+              className={`border-b border-gray-700 hover:bg-gray-800 transition-colors ${
+                score.organization === currentUser?.organization ? 'bg-virus-green bg-opacity-20' : ''
+              }`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.05 }}
+            >
+              <td className="py-3 px-3 text-center text-virus-green font-bold">
+                {score.rank <= 3 ? (
+                  <span className="text-yellow-400">
+                    {score.rank === 1 ? '🥇' : score.rank === 2 ? '🥈' : '🥉'}
+                  </span>
+                ) : (
+                  score.rank
+                )}
+              </td>
+              <td className="py-3 px-3 text-left text-gray-300">
+                {score.organization}
+                {score.organization === currentUser?.organization && (
+                  <span className="ml-2 text-virus-green">(내 소속)</span>
+                )}
+              </td>
+              <td className="py-3 px-3 text-left text-white">{score.name}</td>
+              <td className="py-3 px-3 text-right text-virus-green font-bold">
+                {score.score.toLocaleString()}
+              </td>
+              <td className="py-3 px-3 text-center text-gray-400">{score.date}</td>
+            </motion.tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
   const tabs = [
-    { id: 'weekly', label: '주간점수', icon: '📅' },
-    { id: 'personal', label: '내 점수', icon: '👤' },
-    { id: 'overall', label: '전체점수', icon: '🏆' }
+    { id: 'weekly', label: '주간', icon: '📅' },
+    { id: 'personal', label: '나', icon: '👤' },
+    { id: 'organization', label: '소속', icon: '🏢' },
+    { id: 'overall', label: '전체', icon: '🏆' }
   ] as const;
 
   return (
@@ -243,7 +360,7 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
         {/* 헤더 */}
         <div className="bg-gray-800 px-6 py-4 border-b border-gray-700 flex-shrink-0">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">🏆 점수보기</h2>
+            <h2 className="text-2xl font-bold text-white">🏆 순위</h2>
             <button
               onClick={() => {
                 playClickSound();
@@ -332,6 +449,31 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
                   </div>
                   {personalScores.length > 0 ? (
                     renderScoreTable(personalScores, false)
+                  ) : (
+                    <div className="text-center py-8 text-gray-400">
+                      아직 기록이 없습니다
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {activeTab === 'organization' && (
+                <motion.div
+                  key="organization"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                >
+                  <div className="mb-4 text-center">
+                    <div className="text-virus-green font-bold text-lg mb-2">
+                      🏢 소속 순위
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      각 소속의 최고점수로 순위 결정
+                    </div>
+                  </div>
+                  {organizationScores.length > 0 ? (
+                    renderOrganizationTable(organizationScores)
                   ) : (
                     <div className="text-center py-8 text-gray-400">
                       아직 기록이 없습니다

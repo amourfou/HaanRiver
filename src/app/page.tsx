@@ -38,25 +38,37 @@ export default function Home() {
     dispatch(action);
   };
 
-  // 실제 사용 가능한 높이 계산
+  // 실제 사용 가능한 높이 계산 (게임 화면과 동일한 로직)
   useEffect(() => {
     const updateAvailableHeight = () => {
       let height = window.innerHeight;
+      let offsetTop = 0;
+      let offsetBottom = 0;
       
       // Visual Viewport API 사용 (가장 정확한 방법)
       if (window.visualViewport) {
         height = window.visualViewport.height;
-        console.log('Visual Viewport 높이:', height);
+        offsetTop = window.visualViewport.offsetTop || 0;
+        offsetBottom = window.innerHeight - (window.visualViewport.offsetTop + window.visualViewport.height);
+        
+        console.log('Visual Viewport 정보:', {
+          height: height,
+          offsetTop: offsetTop,
+          offsetBottom: offsetBottom,
+          innerHeight: window.innerHeight,
+          visualViewportHeight: window.visualViewport.height
+        });
       }
       
       // 안전 영역 고려
       const safeAreaTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-top') || '0');
       const safeAreaBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0');
       
+      // 실제 사용 가능한 높이 계산 (상단 주소창과 하단 네비게이션바 제외)
       const actualHeight = height - safeAreaTop - safeAreaBottom;
       setAvailableHeight(Math.max(actualHeight, 400)); // 최소 높이 보장
       
-      console.log(`메인 화면 사용 가능한 높이: ${actualHeight}px`);
+      console.log(`메인 화면 실제 사용 가능한 영역: ${window.innerWidth}x${actualHeight}, offsetTop: ${offsetTop}, offsetBottom: ${offsetBottom}`);
     };
     
     updateAvailableHeight();
@@ -261,7 +273,12 @@ export default function Home() {
     <div 
       className="game-container"
       style={{
-        height: availableHeight > 0 ? `${availableHeight}px` : '100vh' // 실제 사용 가능한 높이 사용
+        height: availableHeight > 0 ? `${availableHeight}px` : '100vh', // 실제 사용 가능한 높이 사용
+        width: '100vw',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        overflow: 'hidden'
       }}
     >
       <AnimatePresence>
@@ -306,6 +323,7 @@ export default function Home() {
             className="absolute inset-0 flex items-center justify-center z-50"
             style={{
               height: availableHeight > 0 ? `${availableHeight}px` : '100vh', // 실제 사용 가능한 높이 사용
+              width: '100vw',
               backgroundImage: 'url(/images/backgroundmenu.PNG)',
               backgroundSize: '100% 100%',
               backgroundPosition: 'center',
