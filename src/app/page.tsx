@@ -39,58 +39,28 @@ export default function Home() {
     dispatch(action);
   };
 
-  // 실제 사용 가능한 높이 계산 (게임 화면과 동일한 로직)
-  useEffect(() => {
-    const updateAvailableHeight = () => {
-      let height = window.innerHeight;
-      let offsetTop = 0;
-      let offsetBottom = 0;
-      
-      // Visual Viewport API 사용 (가장 정확한 방법)
-      if (window.visualViewport) {
-        height = window.visualViewport.height;
-        offsetTop = window.visualViewport.offsetTop || 0;
-        offsetBottom = window.innerHeight - (window.visualViewport.offsetTop + window.visualViewport.height);
-        
-        console.log('Visual Viewport 정보:', {
-          height: height,
-          offsetTop: offsetTop,
-          offsetBottom: offsetBottom,
-          innerHeight: window.innerHeight,
-          visualViewportHeight: window.visualViewport.height
-        });
-      }
-      
-      // 안전 영역 고려
-      const safeAreaTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-top') || '0');
-      const safeAreaBottom = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0');
-      
-      // 실제 사용 가능한 높이 계산 (상단 주소창과 하단 네비게이션바 제외)
-      const actualHeight = height - safeAreaTop - safeAreaBottom;
-      setAvailableHeight(Math.max(actualHeight, 400)); // 최소 높이 보장
-      setOffsetTop(offsetTop); // 상단 오프셋 저장
-      
-      console.log(`메인 화면 실제 사용 가능한 영역: ${window.innerWidth}x${actualHeight}, offsetTop: ${offsetTop}, offsetBottom: ${offsetBottom}`);
-    };
+  // DevTools 환경 감지 (더 정확한 방법)
+  const isDevTools = typeof window !== 'undefined' && (
+    window.outerHeight - window.innerHeight > 100 || 
+    window.outerWidth - window.innerWidth > 100 ||
+    (navigator.userAgent.includes('Chrome') && window.chrome && !navigator.userAgent.includes('Mobile'))
+  );
+
+  // 화면 비율 계산 (375x667 기준)
+  const getResponsiveSize = (baseSize: number) => {
+    if (typeof window === 'undefined') return baseSize;
+    const baseWidth = 375;
+    const baseHeight = 667;
+    const currentWidth = window.innerWidth;
+    const currentHeight = window.innerHeight;
     
-    updateAvailableHeight();
+    // 가로와 세로 비율 중 작은 것을 사용 (화면에 맞게 조절)
+    const widthRatio = currentWidth / baseWidth;
+    const heightRatio = currentHeight / baseHeight;
+    const scale = Math.min(widthRatio, heightRatio);
     
-    // 화면 크기 변경 이벤트 리스너
-    window.addEventListener('resize', updateAvailableHeight);
-    window.addEventListener('orientationchange', updateAvailableHeight);
-    
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', updateAvailableHeight);
-    }
-    
-    return () => {
-      window.removeEventListener('resize', updateAvailableHeight);
-      window.removeEventListener('orientationchange', updateAvailableHeight);
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', updateAvailableHeight);
-      }
-    };
-  }, []);
+    return Math.round(baseSize * scale);
+  };
 
   // 컴포넌트 마운트 시 사용자 정보 확인
   useEffect(() => {
@@ -275,7 +245,7 @@ export default function Home() {
     <div 
       className="game-container"
       style={{
-        height: availableHeight > 0 ? `${availableHeight}px` : '100vh', // 실제 사용 가능한 높이 사용
+        height: isDevTools ? '100vh' : (availableHeight > 0 ? `${availableHeight}px` : '100vh'),
         width: '100vw',
         position: 'fixed',
         top: 0,
@@ -322,11 +292,11 @@ export default function Home() {
       <AnimatePresence>
         {showStartScreen && !showUserRegistration && (
           <motion.div
-            className="absolute flex items-center justify-center z-50"
+            className="absolute flex flex-col justify-center z-50"
             style={{
-              top: offsetTop,
+              top: isDevTools ? 0 : offsetTop,
               left: 0,
-              height: availableHeight > 0 ? `${availableHeight}px` : '100vh', // 실제 사용 가능한 높이 사용
+              height: isDevTools ? '100vh' : (availableHeight > 0 ? `${availableHeight}px` : '100vh'),
               width: '100vw',
               backgroundImage: 'url(/images/backgroundmenu.PNG)',
               backgroundSize: '100% 100%',
@@ -339,12 +309,13 @@ export default function Home() {
           >
 
             {/* 메인 타이틀 */}
-            <div className="text-center text-white z-10" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
+            <div className="text-center text-white z-10 px-4" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8)' }}>
               <motion.h1
-                className="text-6xl md:text-8xl font-bold mb-4 gradient-text"
+                className="font-bold mb-2 gradient-text"
                 initial={{ y: -50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.8 }}
+                style={{ fontSize: `${getResponsiveSize(36)}px` }}
               >
                 HaanRiver
               </motion.h1>
@@ -406,27 +377,29 @@ export default function Home() {
               {showStartScreen && (
                 <>
                   <motion.h2
-                    className="text-2xl md:text-3xl font-semibold mb-8"
+                    className="font-semibold mb-4"
                     initial={{ y: -30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.4, duration: 0.8 }}
+                    style={{ fontSize: `${getResponsiveSize(18)}px` }}
                   >
                     🚀 한강을 지켜라!
                   </motion.h2>
 
                   <motion.div
-                    className="max-w-md mx-auto mb-8 text-lg"
+                    className="max-w-md mx-auto mb-4 px-4"
                     initial={{ y: 30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.6, duration: 0.8 }}
+                    style={{ fontSize: `${getResponsiveSize(14)}px` }}
                   >
-                    <p className="mb-4">
+                    <p className="mb-2">
                       우주에서 외계인이 바이러스를 뿌리고 있어요!
                     </p>
-                    <p className="mb-4">
+                    <p className="mb-2">
                       바이러스를 터치해서 숫자 합이 <span className="text-virus-green font-bold">10</span> 또는 <span className="text-virus-green font-bold">20</span>이 되면 제거됩니다.
                     </p>
-                    <p className="text-sm text-gray-300">
+                    <p className="text-gray-300" style={{ fontSize: `${getResponsiveSize(12)}px` }}>
                       한강이 오염되기 전에 모든 바이러스를 제거하세요!
                     </p>
                   </motion.div>
@@ -435,25 +408,33 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center max-w-sm mx-auto">
                 <motion.button
-                  className="bg-virus-green bg-opacity-80 backdrop-blur-sm text-black font-bold text-xl px-6 py-3 rounded-lg hover:bg-opacity-90 transition-all duration-300 transform hover:scale-105 flex-shrink-0"
+                  className="bg-virus-green bg-opacity-80 backdrop-blur-sm text-black font-bold rounded-lg hover:bg-opacity-90 transition-all duration-300 transform hover:scale-105 flex-shrink-0"
                   onClick={startGame}
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.8, duration: 0.5 }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  style={{ 
+                    fontSize: `${getResponsiveSize(20)}px`, 
+                    padding: `${getResponsiveSize(12)}px ${getResponsiveSize(24)}px` 
+                  }}
                 >
                   {currentUser ? '🎮 게임 시작' : '🎮 게임 시작'}
                 </motion.button>
 
                 <motion.button
-                  className="bg-gray-700 bg-opacity-80 backdrop-blur-sm text-white font-bold text-xl px-6 py-3 rounded-lg hover:bg-opacity-90 transition-all duration-300 transform hover:scale-105 flex-shrink-0"
+                  className="bg-gray-700 bg-opacity-80 backdrop-blur-sm text-white font-bold rounded-lg hover:bg-opacity-90 transition-all duration-300 transform hover:scale-105 flex-shrink-0"
                   onClick={handleShowScoreBoard}
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.9, duration: 0.5 }}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  style={{ 
+                    fontSize: `${getResponsiveSize(20)}px`, 
+                    padding: `${getResponsiveSize(12)}px ${getResponsiveSize(24)}px` 
+                  }}
                 >
                   🏆 점수보기
                 </motion.button>
@@ -465,10 +446,11 @@ export default function Home() {
                 initial={{ y: 50, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 1, duration: 0.8 }}
+                style={{ fontSize: `${getResponsiveSize(14)}px` }}
               >
                 <div className="bg-black bg-opacity-60 backdrop-blur-sm rounded-lg p-4">
-                  <h3 className="font-bold text-white mb-2">게임 방법</h3>
-                  <ul className="text-left space-y-1">
+                  <h3 className="font-bold text-white mb-2" style={{ fontSize: `${getResponsiveSize(16)}px` }}>게임 방법</h3>
+                  <ul className="text-left space-y-1" style={{ fontSize: `${getResponsiveSize(14)}px` }}>
                     <li>• 바이러스를 터치하여 선택</li>
                     <li>• 선택된 숫자들의 합이 10 또는 20</li>
                     <li>• 바이러스가 한강에 닿으면 게임 오버</li>
