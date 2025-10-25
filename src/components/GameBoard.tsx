@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Virus from './Virus';
 import { GameState, Virus as VirusType } from '@/types/game';
-import { playMatchSound, playDroppedSound } from '@/lib/soundUtils';
+import { playMatchSound, playDroppedSound, playDisturbSound } from '@/lib/soundUtils';
 import { 
   createVirus, 
   updateVirusPositions, 
@@ -187,6 +187,101 @@ const GameBoard: React.FC<GameBoardProps> = ({
     }
   };
 
+  // 슈퍼바이러스 효과 처리
+  useEffect(() => {
+    if (gameState.pendingSuperVirusEffect) {
+      console.log('🎯 슈퍼바이러스 효과 실행:', gameState.pendingSuperVirusEffect);
+      
+      // 슈퍼바이러스 효과 액션 실행
+      onGameActionRef.current(gameState.pendingSuperVirusEffect);
+      
+      // pendingSuperVirusEffect 초기화
+      onGameActionRef.current({
+        type: 'CLEAR_PENDING_SUPER_VIRUS_EFFECT'
+      });
+    }
+  }, [gameState.pendingSuperVirusEffect]);
+
+  // 방해바이러스 효과 처리
+  useEffect(() => {
+    if (gameState.isDisturbed) {
+      console.log('🚫 방해바이러스 효과 활성화');
+      playDisturbSound();
+    }
+  }, [gameState.isDisturbed]);
+
+  // 방해바이러스 효과 종료 체크
+  useEffect(() => {
+    if (gameState.isDisturbed) {
+      const checkDisturbEnd = () => {
+        const currentTime = Date.now();
+        if (currentTime >= gameState.disturbEndTime) {
+          console.log('🚫 방해바이러스 효과 종료');
+          onGameActionRef.current({
+            type: 'CLEAR_DISTURB_EFFECT'
+          });
+        }
+      };
+
+      const interval = setInterval(checkDisturbEnd, 100);
+      return () => clearInterval(interval);
+    }
+  }, [gameState.isDisturbed, gameState.disturbEndTime]);
+
+  // 속도 부스트 효과 종료 체크
+  useEffect(() => {
+    if (gameState.isSpeedBoosted) {
+      const checkSpeedBoostEnd = () => {
+        const currentTime = Date.now();
+        if (currentTime >= gameState.speedBoostEndTime) {
+          console.log('⚡ 속도 부스트 효과 종료');
+          onGameActionRef.current({
+            type: 'CLEAR_SPEED_BOOST'
+          });
+        }
+      };
+
+      const interval = setInterval(checkSpeedBoostEnd, 100);
+      return () => clearInterval(interval);
+    }
+  }, [gameState.isSpeedBoosted, gameState.speedBoostEndTime]);
+
+  // 자석 애니메이션 종료 체크
+  useEffect(() => {
+    if (gameState.isMagnetAnimating) {
+      const checkMagnetAnimationEnd = () => {
+        const currentTime = Date.now();
+        if (currentTime >= gameState.magnetAnimationEndTime) {
+          console.log('🧲 자석 애니메이션 종료');
+          onGameActionRef.current({
+            type: 'CLEAR_MAGNET_ANIMATION'
+          });
+        }
+      };
+
+      const interval = setInterval(checkMagnetAnimationEnd, 100);
+      return () => clearInterval(interval);
+    }
+  }, [gameState.isMagnetAnimating, gameState.magnetAnimationEndTime]);
+
+  // 유령 투명화 효과 종료 체크
+  useEffect(() => {
+    if (gameState.transparentViruses.length > 0) {
+      const checkTransparencyEnd = () => {
+        const currentTime = Date.now();
+        if (currentTime >= gameState.transparencyEndTime) {
+          console.log('👻 유령 투명화 효과 종료');
+          onGameActionRef.current({
+            type: 'CLEAR_GHOST_TRANSPARENCY'
+          });
+        }
+      };
+
+      const interval = setInterval(checkTransparencyEnd, 100);
+      return () => clearInterval(interval);
+    }
+  }, [gameState.transparentViruses.length, gameState.transparencyEndTime]);
+
   // 게임 루프
   useEffect(() => {
     if (gameState.isPaused || gameState.isGameOver || gameState.isRoundComplete || screenSize.height === 0) {
@@ -199,8 +294,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
 
       const currentViruses = gameStateRef.current.viruses;
 
-      // 바이러스 위치 업데이트
-      const updatedViruses = updateVirusPositions(currentViruses, deltaTime, screenSize.width);
+      // 바이러스 위치 업데이트 (슬로우/프리즈 효과 포함)
+      const updatedViruses = updateVirusPositions(currentViruses, deltaTime, screenSize.width, gameStateRef.current);
       
       
       // 바닥에 도달한 바이러스 확인
@@ -479,6 +574,8 @@ const GameBoard: React.FC<GameBoardProps> = ({
             virus={virus}
             onTouch={handleVirusTouch}
             screenHeight={screenSize.height}
+            isMagnetAnimating={gameState.isMagnetAnimating}
+            isTransparent={gameState.transparentViruses.includes(virus.id)}
           />
         ))}
       </div>
@@ -625,6 +722,46 @@ const GameBoard: React.FC<GameBoardProps> = ({
           </div>
           <div className="text-xs text-gray-300 text-center">
             합계가 10 또는 20이 되면 바이러스가 제거됩니다!
+          </div>
+        </motion.div>
+      )}
+
+      {/* 방해바이러스 화면 가리기 오버레이 */}
+      {gameState.isDisturbed && (
+        <motion.div
+          className="fixed inset-0 z-[100] flex items-center justify-center"
+          style={{
+            width: '100vw',
+            height: '100vh',
+            left: 0,
+            top: 0,
+            backgroundColor: 'black', // 배경을 검은색으로 설정
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div
+            className="relative w-full h-full"
+            style={{
+              width: '100vw',
+              height: '100vh',
+            }}
+          >
+            <Image
+              src="/images/penalty1.PNG"
+              alt="방해바이러스 효과"
+              fill
+              className="object-cover"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                objectPosition: 'center',
+              }}
+              priority
+            />
           </div>
         </motion.div>
       )}

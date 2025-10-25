@@ -70,3 +70,15 @@ export const playPenaltySound = (penaltyType: 1 | 2 | 3) => {
     console.log('페널티 사운드 로드 실패:', error);
   }
 };
+
+export const playDisturbSound = () => {
+  try {
+    const audio = new Audio('/sounds/penalty1.mp3');
+    audio.volume = 0.5;
+    audio.play().catch((error) => {
+      console.log('방해바이러스 사운드 재생 실패:', error);
+    });
+  } catch (error) {
+    console.log('방해바이러스 사운드 로드 실패:', error);
+  }
+};

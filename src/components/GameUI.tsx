@@ -51,6 +51,28 @@ const GameUI: React.FC<GameUIProps> = ({ gameState, onPause, onResume, onExit, c
             <div className="text-white text-xs">
               최고: {gameState.highScore.toLocaleString()}
             </div>
+            {/* 슈퍼바이러스 점수 보너스 표시 */}
+            {gameState.selectedViruses.some(v => v.isSuperVirus) && (
+              <motion.div
+                className="text-yellow-400 text-xs font-bold"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                ✨ 슈퍼 보너스 1.2배!
+              </motion.div>
+            )}
+            {/* 터보 부스트 표시 */}
+            {gameState.isSpeedBoosted && (
+              <motion.div
+                className="text-yellow-300 text-xs font-bold"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+              >
+                🚀 터보 부스트 1.5배!
+              </motion.div>
+            )}
           </motion.div>
 
           {/* 라운드 */}

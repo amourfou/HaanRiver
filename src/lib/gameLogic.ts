@@ -18,18 +18,38 @@ export const createVirus = (id: string, x: number, speed: number): Virus => {
   const number = Math.floor(Math.random() * 9) + 1; // 1-9 랜덤 숫자
   const colorIndex = (number - 1) % VIRUS_COLORS.length;
   
-  // 5% 확률로 2배 빠른 속도
-  const isFastVirus = Math.random() < 0.05;
-  const finalSpeed = isFastVirus ? speed * 2 : speed;
+  // 5% 확률로 슈퍼바이러스 생성
+  const isSuperVirus = Math.random() < 0.08;
   
+  if (isSuperVirus) {
+    // 슈퍼바이러스 생성
+    const { getRandomSuperVirusType, getSuperVirusConfig } = require('./superVirusConfig');
+    const superVirusType = getRandomSuperVirusType();
+    const config = getSuperVirusConfig(superVirusType);
+    
+    return {
+      id,
+      number,
+      x,
+      y: -50,
+      speed: speed * config.speedMultiplier,
+      color: config.color,
+      isSelected: false,
+      isSuperVirus: true,
+      superVirusType: superVirusType,
+    };
+  }
+  
+  // 일반 바이러스 생성
   return {
     id,
     number,
     x,
-    y: -50, // 화면 위에서 시작
-    speed: finalSpeed,
+    y: -50,
+    speed: speed,
     color: VIRUS_COLORS[colorIndex],
     isSelected: false,
+    isSuperVirus: false,
   };
 };
 
@@ -68,12 +88,38 @@ export const canMakeValidSum = (viruses: Virus[]): boolean => {
   return false;
 };
 
-// 바이러스 위치 업데이트 (낙하 + 겹침 방지)
-export const updateVirusPositions = (viruses: Virus[], deltaTime: number, screenWidth: number = 0): Virus[] => {
+// 바이러스 위치 업데이트 (낙하 + 겹침 방지 + 자석 효과 + 슬로우/프리즈)
+export const updateVirusPositions = (viruses: Virus[], deltaTime: number, screenWidth: number = 0, gameState?: any): Virus[] => {
+  // 슬로우/프리즈 효과 적용
+  let effectiveDeltaTime = deltaTime;
+  
+  if (gameState) {
+    const currentTime = Date.now();
+    
+    // 자석 애니메이션 중에는 바이러스 이동 멈춤
+    if (gameState.isMagnetAnimating && currentTime < gameState.magnetAnimationEndTime) {
+      effectiveDeltaTime = 0; // 자석 애니메이션 중 바이러스 이동 멈춤
+    }
+    // 시간 정지 효과
+    else if (gameState.isFrozen && currentTime < gameState.freezeEndTime) {
+      effectiveDeltaTime = 0; // 시간 정지
+    }
+    // 슬로우 효과 (프리즈가 아닐 때만)
+    else if (gameState.isSlowed && currentTime < gameState.slowEndTime) {
+      effectiveDeltaTime = deltaTime * 0.5; // 50% 속도로 느려짐
+    }
+    // 속도 부스트 효과 (프리즈와 슬로우가 아닐 때만)
+    else if (gameState.isSpeedBoosted && currentTime < gameState.speedBoostEndTime) {
+      effectiveDeltaTime = deltaTime * 1.5; // 1.5배 속도로 빨라짐
+    }
+  }
+
   let updatedViruses = viruses.map(virus => ({
     ...virus,
-    y: virus.y + virus.speed * deltaTime,
+    y: virus.y + virus.speed * effectiveDeltaTime,
   }));
+
+  // 자석 바이러스 효과는 이제 즉시 처리되므로 제거됨
 
   // 바이러스들이 서로 겹치지 않도록 위치 조정
   if (screenWidth > 0) {
@@ -82,6 +128,8 @@ export const updateVirusPositions = (viruses: Virus[], deltaTime: number, screen
 
   return updatedViruses;
 };
+
+// 자석 바이러스 효과는 이제 즉시 처리되므로 이 함수는 더 이상 사용되지 않음
 
 // 바이러스 겹침 방지 함수
 export const preventVirusOverlap = (viruses: Virus[], screenWidth: number): Virus[] => {
@@ -184,6 +232,14 @@ export const calculateScore = (virusCount: number, combo: number): number => {
   const totalScore = (baseScore + bonus) * (1 + combo * 0.5);
   
   return Math.floor(totalScore);
+};
+
+// 슈퍼바이러스 점수 보너스 계산
+export const calculateSuperVirusScore = (baseScore: number, hasSuperVirus: boolean): number => {
+  if (hasSuperVirus) {
+    return Math.floor(baseScore * 1.2); // 슈퍼바이러스 포함 시 1.2배
+  }
+  return baseScore;
 };
 
 // 랜덤 X 위치 생성 (화면 너비 내)
