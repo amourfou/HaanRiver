@@ -43,7 +43,7 @@ export default function Home() {
   const isDevTools = typeof window !== 'undefined' && (
     window.outerHeight - window.innerHeight > 100 || 
     window.outerWidth - window.innerWidth > 100 ||
-    (navigator.userAgent.includes('Chrome') && window.chrome && !navigator.userAgent.includes('Mobile'))
+    (navigator.userAgent.includes('Chrome') && (window as any).chrome && !navigator.userAgent.includes('Mobile'))
   );
 
   // 화면 비율 계산 (375x667 기준)

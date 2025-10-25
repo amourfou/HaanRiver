@@ -146,7 +146,7 @@ export const getRandomSuperVirusType = (): SuperVirusType => {
   }
   
   // 기본값 (fallback)
-  return 'lightning';
+  return 'turbo';
 };
 
 // 슈퍼바이러스 설정 가져오기

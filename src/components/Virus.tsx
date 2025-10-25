@@ -150,8 +150,8 @@ const Virus: React.FC<VirusProps> = ({ virus, onTouch, screenHeight, isMagnetAni
        {/* 슈퍼바이러스 특별 효과 */}
        {virus.isSuperVirus && (
         <>
-          {/* 번개 효과 */}
-          {virus.superVirusType === 'lightning' && (
+          {/* 터보 효과 */}
+          {virus.superVirusType === 'turbo' && (
             <motion.div
               className="absolute inset-0 rounded-full"
               style={{
@@ -169,24 +169,6 @@ const Virus: React.FC<VirusProps> = ({ virus, onTouch, screenHeight, isMagnetAni
             />
           )}
           
-          {/* 무지개 효과 */}
-          {virus.superVirusType === 'rainbow' && (
-            <motion.div
-              className="absolute inset-0 rounded-full"
-              style={{
-                background: `conic-gradient(from 0deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff, #0080ff, #0000ff, #8000ff, #ff00ff, #ff0080, #ff0000)`,
-                opacity: 0.3,
-              }}
-              animate={{
-                rotate: [0, 360],
-              }}
-              transition={{
-                duration: 2,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-            />
-          )}
           
            {/* 유령 효과 */}
            {virus.superVirusType === 'ghost' && (
