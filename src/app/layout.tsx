@@ -1,21 +1,37 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'] })
 
+const APP_NAME = 'HaanRiver'
+const APP_TITLE = 'HaanRiver - 한강을 지켜라!'
+const APP_DESCRIPTION = '우주 바이러스로부터 한강을 지키는 퍼즐 게임'
+
 export const metadata: Metadata = {
-  title: 'HaanRiver - 한강을 지켜라!',
-  description: '우주 바이러스로부터 한강을 지키는 퍼즐 게임',
+  applicationName: APP_NAME,
+  title: APP_TITLE,
+  description: APP_DESCRIPTION,
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'HaanRiver',
+    title: APP_NAME,
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: [
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' },
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
 }
 
-export const viewport = {
+export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
@@ -31,17 +47,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko" className={inter.className}>
-      <head>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-        <meta name="format-detection" content="telephone=no" />
-        <link rel="icon" href="/favicon.ico" />
-      </head>
-      <body>
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   )
 }
