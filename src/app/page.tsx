@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useReducer, useState, useEffect } from 'react';
+import React, { useReducer, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GameBoard from '@/components/GameBoard';
 import GameUI from '@/components/GameUI';
@@ -10,15 +10,12 @@ import ScoreBoard from '@/components/ScoreBoard';
 import TypingDialog from '@/components/TypingDialog';
 import { gameReducer, initialGameState } from '@/lib/gameReducer';
 import { GameAction, User } from '@/types/game';
-import { 
-  getUserIdFromCookie, 
-  getUserFromSupabase, 
-  getUserByNameFromSupabase,
-  saveUserIdToCookie,
-  clearUserIdFromCookie,
-  createUserInSupabase, 
-  updateUserScoreInSupabase,
-  saveGameSession 
+import {
+  fetchMe,
+  loginWithPin,
+  logoutSession,
+  startGameOnServer,
+  submitGameResult,
 } from '@/lib/supabaseUserUtils';
 import { playClickSound } from '@/lib/soundUtils';
 
@@ -62,47 +59,39 @@ export default function Home() {
     return Math.round(baseSize * scale);
   };
 
-  // 컴포넌트 마운트 시 사용자 정보 확인
+  // 컴포넌트 마운트 시 세션(HttpOnly 쿠키)으로 사용자 정보 확인
   useEffect(() => {
-    const checkUser = async () => {
-      console.log('🔍 사용자 정보 확인 시작');
-      const userId = getUserIdFromCookie();
-      console.log('🍪 쿠키에서 가져온 사용자 ID:', userId);
-      
-      if (userId) {
-        console.log('📡 Supabase에서 사용자 정보 조회 중...');
-        const user = await getUserFromSupabase(userId);
-        if (user) {
-          console.log('✅ 사용자 정보 로드 성공:', user);
-          console.log('🎯 사용자 최고 점수:', user.highScore);
-          setCurrentUser(user);
-          // 사용자의 최고 점수를 게임 상태에 반영
-          console.log('🎮 게임 상태에 최고 점수 설정:', user.highScore);
-          dispatch({ type: 'SET_HIGH_SCORE', payload: { highScore: user.highScore } });
-        } else {
-          console.log('❌ 사용자 정보를 찾을 수 없습니다');
-        }
-        // 사용자 정보가 없어도 바로 등록 화면을 보여주지 않음
-      } else {
-        console.log('❌ 쿠키에 사용자 ID가 없습니다');
+    void fetchMe().then((user) => {
+      if (user) {
+        setCurrentUser(user);
+        dispatch({ type: 'SET_HIGH_SCORE', payload: { highScore: user.highScore } });
       }
-      // 사용자 정보가 없어도 바로 등록 화면을 보여주지 않음
-    };
-    
-    checkUser();
+    });
   }, []);
+
+  // 게임이 시작되면 서버에서 서명된 시작 토큰을 받아 둬요 (점수 검증용)
+  const gameTokenRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (gameState.isGameStarted && currentUser) {
+      gameTokenRef.current = null;
+      void startGameOnServer().then((t) => {
+        gameTokenRef.current = t;
+      });
+    }
+  }, [gameState.isGameStarted, currentUser]);
 
   const handleGameOver = async () => {
     dispatch({ type: 'GAME_OVER' });
     // 게임 오버 시 사용자 점수 업데이트 및 게임 세션 저장
-    if (currentUser && gameState.score > 0) {
-      await updateUserScoreInSupabase(currentUser.id, gameState.score);
-      await saveGameSession(
-        currentUser.id, 
-        gameState.score, 
-        gameState.round, 
-        gameState.virusesReachedBottom
-      );
+    if (currentUser && gameState.score > 0 && gameTokenRef.current) {
+      const r = await submitGameResult(gameTokenRef.current, gameState.score, gameState.round, gameState.virusesReachedBottom);
+      gameTokenRef.current = null;
+      if (r.ok && typeof r.highScore === 'number') {
+        const highScore = r.highScore;
+        setCurrentUser((u) => (u ? { ...u, highScore } : u));
+      } else if (!r.ok) {
+        console.error('점수 저장 실패:', r.error);
+      }
     }
   };
 
@@ -114,55 +103,16 @@ export default function Home() {
     dispatch({ type: 'RESUME_GAME' });
   };
 
-  const handleUserRegistration = async (name: string, organization: string) => {
-    try {
-      const newUser = await createUserInSupabase(name, organization);
-      if (newUser) {
-        console.log('새로 생성된 사용자 정보:', newUser);
-        console.log('새 사용자 최고 점수:', newUser.highScore);
-        setCurrentUser(newUser);
-        // 사용자의 최고 점수를 게임 상태에 반영
-        dispatch({ type: 'SET_HIGH_SCORE', payload: { highScore: newUser.highScore } });
-        setShowUserRegistration(false);
-        // 등록 완료 후 바로 게임 시작
-        setShowStartScreen(false);
-        dispatch({ type: 'START_GAME' });
-      } else {
-        console.error('사용자 등록에 실패했습니다.');
-      }
-    } catch (error: any) {
-      if (error.message === 'DUPLICATE_NAME') {
-        console.log('🎖️ 중복 이름 감지! 기존 사용자 조회 중...');
-        // 중복 이름인 경우 기존 사용자 정보 조회
-        try {
-          const existingUser = await getUserByNameFromSupabase(name);
-          if (existingUser) {
-            console.log('🎖️ 기존 사용자 발견:', existingUser);
-            // 기존 사용자로 바로 게임 시작 (타이핑 대화창 없이)
-            setCurrentUser(existingUser);
-            dispatch({ type: 'SET_HIGH_SCORE', payload: { highScore: existingUser.highScore } });
-            saveUserIdToCookie(existingUser.id);
-            setShowUserRegistration(false);
-            setShowStartScreen(false);
-            dispatch({ type: 'START_GAME' });
-            console.log('🎖️ 기존 사용자로 바로 게임 시작됨');
-          } else {
-            console.log('❌ 기존 사용자 정보를 찾을 수 없습니다');
-            // 기존 사용자 정보를 찾을 수 없는 경우 경고 표시
-            setDuplicateName(name);
-            setShowMilitaryWarning(true);
-            setShowUserRegistration(false);
-          }
-        } catch (lookupError) {
-          console.error('기존 사용자 조회 실패:', lookupError);
-          setDuplicateName(name);
-          setShowMilitaryWarning(true);
-          setShowUserRegistration(false);
-        }
-      } else {
-        console.error('사용자 등록에 실패했습니다:', error);
-      }
+  const handleLogin = async (name: string, pin: string) => {
+    const r = await loginWithPin(name, pin);
+    if (r.ok) {
+      setCurrentUser(r.user);
+      dispatch({ type: 'SET_HIGH_SCORE', payload: { highScore: r.user.highScore } });
+      setShowUserRegistration(false);
+      setShowStartScreen(false);
+      dispatch({ type: 'START_GAME' });
     }
+    return r;
   };
 
   const handleCancelRegistration = () => {
@@ -190,8 +140,7 @@ export default function Home() {
 
   const handleLogout = () => {
     playClickSound();
-    // 쿠키 삭제
-    clearUserIdFromCookie();
+    void logoutSession();
     // 사용자 정보 초기화
     setCurrentUser(null);
     // 게임 상태 초기화
@@ -203,19 +152,9 @@ export default function Home() {
 
 
   const handleTypingDialogComplete = () => {
-    console.log('🎖️ 타이핑 대화창 완료 함수 호출됨');
-    if (existingUser) {
-      console.log('🎖️ 기존 사용자로 게임 시작:', existingUser);
-      setCurrentUser(existingUser);
-      dispatch({ type: 'SET_HIGH_SCORE', payload: { highScore: existingUser.highScore } });
-      // 기존 사용자 쿠키 저장
-      saveUserIdToCookie(existingUser.id);
-      setShowTypingDialog(false);
-      setShowStartScreen(false);
-      // 게임 시작 - resetGame이나 handleExit 호출하지 않음
-      dispatch({ type: 'START_GAME' });
-      console.log('🎖️ 게임 시작 명령 실행됨');
-    }
+    // 예전 "중복 이름" 흐름은 PIN 로그인으로 대체되었어요.
+    setShowTypingDialog(false);
+    if (existingUser) setShowUserRegistration(true);
   };
 
   const startGame = () => {
@@ -256,7 +195,7 @@ export default function Home() {
       <AnimatePresence>
         {showUserRegistration && (
           <UserRegistration 
-            onRegister={handleUserRegistration} 
+            onLogin={handleLogin} 
             onCancel={handleCancelRegistration}
           />
         )}

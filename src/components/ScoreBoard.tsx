@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '@/lib/supabase';
+import { fetchRankings } from '@/lib/supabaseUserUtils';
 import { User } from '@/types/game';
 import { playClickSound } from '@/lib/soundUtils';
 
@@ -60,30 +60,8 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
   const fetchWeeklyScores = async () => {
     try {
       setLoading(true);
-      const weekStart = getWeekStart();
-      
-      const { data, error } = await supabase
-        .from('game_sessions')
-        .select(`
-          score,
-          played_at,
-          users!inner(name, organization)
-        `)
-        .gte('played_at', weekStart.toISOString())
-        .order('score', { ascending: false })
-        .limit(20);
-
-      if (error) throw error;
-
-      const scores: ScoreData[] = data?.map((item: any, index) => ({
-        rank: index + 1,
-        name: item.users.name,
-        organization: item.users.organization,
-        score: item.score,
-        date: formatDate(item.played_at)
-      })) || [];
-
-      setWeeklyScores(scores);
+      const rows = await fetchRankings('weekly');
+      setWeeklyScores(rows.map((r, index) => ({ rank: index + 1, name: r.name, organization: r.organization, score: r.score, date: formatDate(r.playedAt) })));
     } catch (err) {
       setError('주간 점수를 불러오는데 실패했습니다.');
       console.error('Weekly scores fetch error:', err);
@@ -95,29 +73,10 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
   // 개인 점수 조회
   const fetchPersonalScores = async () => {
     if (!currentUser) return;
-    
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('game_sessions')
-        .select('score, played_at')
-        .eq('user_id', currentUser.id)
-        .order('score', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-
-      const scores: ScoreData[] = data?.map((item, index) => ({
-        rank: index + 1,
-        name: currentUser.name,
-        organization: currentUser.organization,
-        score: item.score,
-        date: formatDate(item.played_at),
-        userId: currentUser.id
-      })) || [];
-
-      setPersonalScores(scores);
+      const rows = await fetchRankings('personal');
+      setPersonalScores(rows.map((r, index) => ({ rank: index + 1, name: r.name, organization: r.organization, score: r.score, date: formatDate(r.playedAt) })));
     } catch (err) {
       setError('개인 점수를 불러오는데 실패했습니다.');
       console.error('Personal scores fetch error:', err);
@@ -130,47 +89,8 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
   const fetchOrganizationScores = async () => {
     try {
       setLoading(true);
-      
-      // 각 소속별로 최고점수를 조회
-      const { data, error } = await supabase
-        .from('users')
-        .select(`
-          name,
-          organization,
-          high_score,
-          updated_at
-        `)
-        .order('high_score', { ascending: false });
-
-      if (error) throw error;
-
-      // 소속별로 그룹화하고 각 소속의 최고점수만 선택
-      const organizationMap = new Map<string, any>();
-      
-      data?.forEach((user: any) => {
-        const org = user.organization;
-        if (!organizationMap.has(org) || organizationMap.get(org).high_score < user.high_score) {
-          organizationMap.set(org, {
-            organization: org,
-            name: user.name,
-            score: user.high_score,
-            date: user.updated_at
-          });
-        }
-      });
-
-      // 점수순으로 정렬하고 순위 부여
-      const organizationScores: OrganizationRanking[] = Array.from(organizationMap.values())
-        .sort((a, b) => b.score - a.score)
-        .map((item, index) => ({
-          rank: index + 1,
-          organization: item.organization,
-          name: item.name,
-          score: item.score,
-          date: formatDate(item.date)
-        }));
-
-      setOrganizationScores(organizationScores);
+      const rows = await fetchRankings('organization');
+      setOrganizationScores(rows.map((r, index) => ({ rank: index + 1, organization: r.organization, name: r.name, score: r.score, date: formatDate(r.playedAt) })));
     } catch (err) {
       setError('소속 점수를 불러오는데 실패했습니다.');
       console.error('Organization scores fetch error:', err);
@@ -183,28 +103,8 @@ export default function ScoreBoard({ onClose, currentUser }: ScoreBoardProps) {
   const fetchOverallScores = async () => {
     try {
       setLoading(true);
-      
-      const { data, error } = await supabase
-        .from('game_sessions')
-        .select(`
-          score,
-          played_at,
-          users!inner(name, organization)
-        `)
-        .order('score', { ascending: false })
-        .limit(50);
-
-      if (error) throw error;
-
-      const scores: ScoreData[] = data?.map((item: any, index) => ({
-        rank: index + 1,
-        name: item.users.name,
-        organization: item.users.organization,
-        score: item.score,
-        date: formatDate(item.played_at)
-      })) || [];
-
-      setOverallScores(scores);
+      const rows = await fetchRankings('overall');
+      setOverallScores(rows.map((r, index) => ({ rank: index + 1, name: r.name, organization: r.organization, score: r.score, date: formatDate(r.playedAt) })));
     } catch (err) {
       setError('전체 점수를 불러오는데 실패했습니다.');
       console.error('Overall scores fetch error:', err);
